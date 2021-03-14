@@ -1,4 +1,5 @@
 ﻿using Grains;
+using Grains.Storage;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Configuration;
@@ -45,7 +46,11 @@ namespace Silo
             options.ServiceId = "OrleansBasics";
           })
           .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(HelloGrain).Assembly).WithReferences())
-          .ConfigureLogging(logging => logging.AddConsole());
+          .ConfigureLogging(logging => logging.AddConsole())
+          .AddFileGrainStorage("File", opts =>
+          {
+            opts.RootDirectory = "./TestFiles";
+          });
 
       var host = builder.Build();
       await host.StartAsync();
