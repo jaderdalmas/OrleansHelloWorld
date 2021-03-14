@@ -1,10 +1,13 @@
 ﻿using GrainInterfaces;
 using Microsoft.Extensions.Logging;
+using Orleans;
+using Orleans.Providers;
 using System.Threading.Tasks;
 
 namespace Grains
 {
-  public class HelloGrain : Orleans.Grain, IHello
+  [StorageProvider(ProviderName = "File")]
+  public class HelloGrain : Grain, IHello
   {
     private readonly ILogger logger;
 
