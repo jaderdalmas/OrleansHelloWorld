@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Client
@@ -18,9 +19,13 @@ namespace Client
     {
       try
       {
+        var tasks = new List<Task>();
         using (var client = await ConnectClient())
         {
-          await DoClientWork(client);
+          for (int i = 0; i < 100; i++)
+            tasks.Add(DoClientWork(client));
+
+          Task.WaitAll(tasks.ToArray());
           Console.ReadKey();
         }
 
