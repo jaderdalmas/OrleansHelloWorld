@@ -1,9 +1,9 @@
 ﻿using GrainInterfaces;
 using Microsoft.Extensions.Logging;
 using Orleans;
-using Orleans.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Client
@@ -19,14 +19,36 @@ namespace Client
     {
       try
       {
-        var tasks = new List<Task>();
         using (var client = await ConnectClient())
         {
-          for (int i = 0; i < 100; i++)
-            tasks.Add(DoClientWork(client));
+          Console.WriteLine("Will it be a 1-hello or a 2-prime test?");
 
-          Task.WaitAll(tasks.ToArray());
-          Console.ReadKey();
+          var key = Console.ReadKey();
+          while (key != null)
+          {
+            var clock = new Stopwatch();
+            if (key.KeyChar == '1')
+            {
+              var tasks = new List<Task>();
+              for (int i = 1; i < 100; i++)
+                tasks.Add(DoHello(client, i));
+
+              Task.WaitAll(tasks.ToArray());
+            }
+            else if (key.KeyChar == '2')
+            {
+              clock.Restart();
+
+              await DoMultiPrime(client);
+
+              clock.Stop();
+              Console.WriteLine($"Elapsed: {clock.ElapsedMilliseconds}ms");
+              Console.WriteLine($"Elapsed Ticks: {clock.ElapsedTicks}");
+            }
+            else break;
+
+            key = Console.ReadKey();
+          }
         }
 
         return 0;
@@ -46,11 +68,7 @@ namespace Client
       IClusterClient client;
       client = new ClientBuilder()
           .UseLocalhostClustering()
-          .Configure<ClusterOptions>(options =>
-          {
-            options.ClusterId = "dev";
-            options.ServiceId = "OrleansBasics";
-          })
+          .Configure_ClusterOptions()
           .ConfigureLogging(logging => logging.AddConsole())
           .Build();
 
@@ -59,12 +77,40 @@ namespace Client
       return client;
     }
 
-    private static async Task DoClientWork(IClusterClient client)
-    {
-      // example of calling grains from the initialized client
+    private static async Task DoHello(IClusterClient client, int counter)
+    { // example of calling grains from the initialized client
       var friend = client.GetGrain<IHello>(0);
-      var response = await friend.SayHello("Good morning, HelloGrain!");
+      var response = await friend.SayHello($"Good morning, {counter}!");
       Console.WriteLine($"\n\n{response}\n\n");
+    }
+
+    private static async Task DoMultiPrime(IClusterClient client)
+    {
+      for (int mil = 0; mil < 100; mil++)
+      {
+        var tasks = new List<Task>();
+
+        for (int dez = 0; dez < 1000; dez += 10)
+        {
+          var item = (mil == 0 ? 100 : 0) + mil * 1000 + dez;
+
+          tasks.Add(DoSinglePrime(client, item + 1));
+          tasks.Add(DoSinglePrime(client, item + 3));
+          tasks.Add(DoSinglePrime(client, item + 7));
+          tasks.Add(DoSinglePrime(client, item + 9));
+        }
+
+        Task.WaitAll(tasks.ToArray());
+      }
+    }
+
+    private static async Task DoSinglePrime(IClusterClient client, int number)
+    {
+      var friend = client.GetGrain<IPrime>(0);
+      var response = await friend.IsPrime(number);
+
+      var isprime = response ? "is prime" : "is not prime";
+      Console.WriteLine($"\n\n{number} {isprime}\n\n");
     }
   }
 }

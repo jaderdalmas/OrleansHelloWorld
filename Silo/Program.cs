@@ -1,10 +1,14 @@
-﻿using Grains;
+﻿using GrainInterfaces;
+using Grains;
 using Grains.Storage;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Hosting;
 using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Silo
@@ -40,12 +44,12 @@ namespace Silo
       // define the cluster configuration
       var builder = new SiloHostBuilder()
           .UseLocalhostClustering()
-          .Configure<ClusterOptions>(options =>
-          {
-            options.ClusterId = "dev";
-            options.ServiceId = "OrleansBasics";
+          .Configure_ClusterOptions()
+          .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
+          .Configure_Grains(new List<Assembly>() {
+            typeof(PrimeGrain).Assembly,
+            typeof(HelloGrain).Assembly
           })
-          .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(HelloGrain).Assembly).WithReferences())
           .ConfigureLogging(logging => logging.AddConsole())
           .AddFileGrainStorage("File", opts =>
           {
