@@ -46,10 +46,7 @@ namespace Silo
           .UseLocalhostClustering()
           .Configure_ClusterOptions()
           .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-          .Configure_Grains(new List<Assembly>() {
-            typeof(PrimeGrain).Assembly,
-            typeof(HelloGrain).Assembly
-          })
+          .Configure_Grains()
           .ConfigureLogging(logging => logging.AddConsole())
           .AddFileGrainStorage("File", opts =>
           {

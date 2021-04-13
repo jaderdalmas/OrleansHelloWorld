@@ -1,6 +1,4 @@
-﻿using GrainInterfaces;
-using Grains;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Grains;
 using Orleans.Hosting;
 using Orleans.TestingHost;
 
@@ -10,10 +8,7 @@ namespace Tests
   {
     public void Configure(ISiloBuilder hostBuilder)
     {
-      hostBuilder.ConfigureServices(services => {
-        services.AddSingleton<IHello, HelloGrain>();
-        services.AddSingleton<IPrime, PrimeGrain>();
-      });
+      hostBuilder.Configure_Grains();
     }
   }
 }
