@@ -12,6 +12,7 @@ namespace Tests
     {
       hostBuilder.ConfigureServices(services => {
         services.AddSingleton<IHello, HelloGrain>();
+        services.AddSingleton<IPrime, PrimeGrain>();
       });
     }
   }
