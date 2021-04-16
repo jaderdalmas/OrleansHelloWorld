@@ -27,13 +27,13 @@ namespace Grains
 
     Task<bool> IPrime.IsPrime(int number)
     {
-      if (State.Primes.Contains(number))
+      if (State.HasPrime(number))
       {
         logger.LogInformation($"{number} is prime and is on the list");
         return Task.FromResult(true);
       }
-
-      var _primesqrt = State.Primes.Where(x => x <= Math.Sqrt(number));
+      
+      var _primesqrt = State.GetPrimes(number);
       foreach (var prime in _primesqrt.AsParallel())
         if (number.IsDivisible(prime))
         {
@@ -49,7 +49,7 @@ namespace Grains
     }
   }
 
-  public class PrimeState
+  public class PrimeState : IDisposable
   {
     public void Initialize(Func<Task> act)
     {
@@ -62,21 +62,30 @@ namespace Grains
 
     public IList<int> Primes { get; set; }
 
-    private bool IsWriting = false;
+    public bool HasPrime(int value) => Primes.Contains(value);
+    public IEnumerable<int> GetPrimes(int value) => Primes.Where(x => x <= Math.Sqrt(value));
+
+    private Func<Task> Act = null;
     public async Task AddPrime(int value, Func<Task> act)
     {
       Primes.Add(value);
 
-      if (!IsWriting)
+      if (Act == null)
       {
-        IsWriting = true;
+        Act = act;
         await Task.Delay(1000);
 
         Primes = Primes.OrderBy(x => x).ToList();
 
-        IsWriting = false;
-        await act.Invoke();
+        await Act.Invoke();
+        Act = null;
       }
+    }
+
+    public void Dispose()
+    {
+      if (Act != null)
+        Act.Invoke();
     }
   }
 }
