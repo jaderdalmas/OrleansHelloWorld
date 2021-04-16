@@ -42,9 +42,8 @@ namespace Grains
         }
 
       logger.LogInformation($"{number} is prime and will be added on the list");
-      
-      State.Primes.Add(number);
-      //WriteStateAsync();
+
+      State.AddPrime(number, WriteStateAsync);
 
       return Task.FromResult(true);
     }
@@ -61,6 +60,23 @@ namespace Grains
       }
     }
 
-    public List<int> Primes { get; set; }
+    public IList<int> Primes { get; set; }
+
+    private bool IsWriting = false;
+    public async Task AddPrime(int value, Func<Task> act)
+    {
+      Primes.Add(value);
+
+      if (!IsWriting)
+      {
+        IsWriting = true;
+        await Task.Delay(1000);
+
+        Primes = Primes.OrderBy(x => x).ToList();
+
+        IsWriting = false;
+        await act.Invoke();
+      }
+    }
   }
 }
