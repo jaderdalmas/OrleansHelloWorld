@@ -30,17 +30,17 @@ namespace Grains.Storage
       _typeResolver = typeResolver;
     }
 
-    private string GetKeyString(string grainType, GrainReference grainReference)
+    private FileInfo GetFileInfo(string grainType, GrainReference grainReference)
     {
-      return $"{_clusterOptions.ServiceId}.{grainReference.ToKeyString()}.{grainType}";
+      var fName = $"{_clusterOptions.ServiceId}.{grainReference.ToKeyString()}.{grainType}";
+      var path = Path.Combine(_options.RootDirectory, fName);
+
+      return new FileInfo(path);
     }
 
     public Task ClearStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
     {
-      var fName = GetKeyString(grainType, grainReference);
-      var path = Path.Combine(_options.RootDirectory, fName);
-
-      var fileInfo = new FileInfo(path);
+      var fileInfo = GetFileInfo(grainType, grainReference);
       if (fileInfo.Exists)
       {
         if (fileInfo.LastWriteTimeUtc.ToString() != grainState.ETag)
@@ -58,10 +58,7 @@ namespace Grains.Storage
 
     public async Task ReadStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
     {
-      var fName = GetKeyString(grainType, grainReference);
-      var path = Path.Combine(_options.RootDirectory, fName);
-
-      var fileInfo = new FileInfo(path);
+      var fileInfo = GetFileInfo(grainType, grainReference);
       if (!fileInfo.Exists)
       {
         grainState.State = Activator.CreateInstance(grainState.State.GetType());
@@ -81,11 +78,7 @@ namespace Grains.Storage
     {
       var storedData = JsonConvert.SerializeObject(grainState.State, _jsonSettings);
 
-      var fName = GetKeyString(grainType, grainReference);
-      var path = Path.Combine(_options.RootDirectory, fName);
-
-      var fileInfo = new FileInfo(path);
-
+      var fileInfo = GetFileInfo(grainType, grainReference);
       if (fileInfo.Exists && fileInfo.LastWriteTimeUtc.ToString() != grainState.ETag)
       {
         throw new InconsistentStateException($"Version conflict (WriteState): ServiceId={_clusterOptions.ServiceId} ProviderName={_storageName} GrainType={grainType} GrainReference={grainReference.ToKeyString()}.");
@@ -106,8 +99,7 @@ namespace Grains.Storage
     }
 
     private Task Init(CancellationToken ct)
-    {
-      // Settings could be made configurable from Options.
+    { // Settings could be made configurable from Options.
       _jsonSettings = OrleansJsonSerializer.UpdateSerializerSettings(OrleansJsonSerializer.GetDefaultSerializerSettings(_typeResolver, _grainFactory), false, false, null);
 
       var directory = new DirectoryInfo(_options.RootDirectory);
