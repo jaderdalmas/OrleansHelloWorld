@@ -8,7 +8,8 @@ namespace Tests
   {
     public void Configure(ISiloBuilder hostBuilder)
     {
-      hostBuilder.Configure_Grains();
+      hostBuilder.Configure_Grains()
+        .AddMemoryGrainStorage(name: AppConst.Storage);
     }
   }
 }
