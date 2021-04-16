@@ -20,8 +20,7 @@ namespace Grains
     public static ISiloHostBuilder Configure_Grains(this ISiloHostBuilder builder)
     {
       var assemblies = new List<Assembly>() {
-        typeof(HelloGrain).Assembly,
-        typeof(PrimeGrain).Assembly
+        typeof(HelloGrain).Assembly
       };
 
       return builder.Configure_Grains(assemblies);

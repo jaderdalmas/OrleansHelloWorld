@@ -46,9 +46,9 @@ namespace Silo
           .UseLocalhostClustering()
           .Configure_ClusterOptions()
           .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-          .Configure_Grains()
+          .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
           .ConfigureLogging(logging => logging.AddConsole())
-          .AddFileGrainStorage("File", opts =>
+          .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
           {
             opts.RootDirectory = "./TestFiles";
           });
