@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Grains
 {
-  [StorageProvider(ProviderName = "File")]
+  [StorageProvider(ProviderName = AppConst.Storage)]
   public class HelloGrain : Grain, IHello
   {
     private readonly ILogger logger;
@@ -22,8 +22,11 @@ namespace Grains
 
     Task<string> IHello.SayHello(string greeting)
     {
-      logger.LogInformation($"\n [SayHello] counter = {++_counter} | Time: {DateTime.UtcNow.ToFileTimeUtc()} | greeting = '{greeting}'");
-      return Task.FromResult($"\n Client: '{greeting}' | Grain: Hello {_counter} times! | Time: {DateTime.UtcNow.ToFileTimeUtc()}");
+      var counter = $"{++_counter} times!";
+      var time = $"Time: {DateTime.UtcNow.ToFileTimeUtc()}";
+
+      logger.LogInformation($"\n [SayHello] {counter} | greeting = '{greeting}' | {time}");
+      return Task.FromResult($"\n Client: '{greeting}' | Grain: Hello {counter} | {time}");
     }
   }
 }
