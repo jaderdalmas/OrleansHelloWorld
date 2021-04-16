@@ -2,8 +2,8 @@
 {
   public static class AppConst
   {
-    public static string ClusterId => "dev";
+    public const string ClusterId = "dev";
 
-    public static string ServiceId => "OrleansBasics";
+    public const string ServiceId = "OrleansBasics";
   }
 }
