@@ -20,11 +20,7 @@ namespace Grains
 
     public override Task OnActivateAsync()
     {
-      if (State.Primes == null)
-      {
-        State.Primes = new List<int>() { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 };
-        WriteStateAsync();
-      }
+      State.Initialize(WriteStateAsync);
 
       return base.OnActivateAsync();
     }
@@ -48,7 +44,7 @@ namespace Grains
       logger.LogInformation($"{number} is prime and will be added on the list");
       
       State.Primes.Add(number);
-      WriteStateAsync();
+      //WriteStateAsync();
 
       return Task.FromResult(true);
     }
@@ -56,6 +52,15 @@ namespace Grains
 
   public class PrimeState
   {
+    public void Initialize(Func<Task> act)
+    {
+      if (Primes == null)
+      {
+        Primes = new List<int>() { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 };
+        act.Invoke();
+      }
+    }
+
     public List<int> Primes { get; set; }
   }
 }
