@@ -23,9 +23,9 @@ namespace Client
       {
         var tasks = new List<Task>();
 
-        for (int dez = 0; dez < 1000; dez += 10)
+        for (int dez = mil == 0 ? 100 : 0; dez < 1000; dez += 10)
         {
-          var item = (mil == 0 ? 100 : 0) + mil * 1000 + dez;
+          var item = mil * 1000 + dez;
 
           tasks.Add(DoSinglePrime(client, item + 1));
           tasks.Add(DoSinglePrime(client, item + 3));
