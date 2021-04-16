@@ -23,7 +23,7 @@ namespace Tests
       var hello = _cluster.GrainFactory.GetGrain<IHello>(0);
       var greeting = await hello.SayHello(text);
 
-      Assert.Equal($"\n Client said: '{text}', so HelloGrain says: Hello!", greeting);
+      Assert.Equal($"\n Client: '{text}' | Grain: Hello 1 times! | Time: ", greeting.Substring(0, 50));
     }
   }
 }
