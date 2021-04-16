@@ -68,6 +68,8 @@ namespace Grains.Storage
       using (var stream = fileInfo.OpenText())
       {
         var storedData = await stream.ReadToEndAsync();
+        stream.Close();
+
         grainState.State = JsonConvert.DeserializeObject(storedData, _jsonSettings);
       }
 
@@ -87,6 +89,7 @@ namespace Grains.Storage
       using (var stream = new StreamWriter(fileInfo.Open(FileMode.Create, FileAccess.Write)))
       {
         await stream.WriteAsync(storedData);
+        stream.Close();
       }
 
       fileInfo.Refresh();
