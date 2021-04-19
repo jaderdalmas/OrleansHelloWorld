@@ -11,7 +11,7 @@ It all started with a Hello World, but then the learning process begins ...
 
 To better understand Orleans, check out this link --> https://github.com/dotnet/orleans
 
-### Nugets:
+### Nugets: external dependencies
 --> https://www.nuget.org/packages?q=Microsoft.Extensions.Logging
 - [Microsoft.Extensions.Logging.Console] -> Client & Silo
 - [Microsoft.Extensions.Logging.Abstractions] -> Grain
