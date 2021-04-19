@@ -12,34 +12,20 @@ It all started with a Hello World, but then the learning process begins ...
 To better understand Orleans, check out this link --> https://github.com/dotnet/orleans
 
 ### Nugets:
-- [Microsoft.Extensions.Logging.Console]
-- [Microsoft.Extensions.Logging.Abstractions]
-- [Microsoft.Orleans.Client]
-- [Microsoft.Orleans.CodeGenerator.MSBuild]
-- [Microsoft.Orleans.Core]
-- [Microsoft.Orleans.Core.Abstractions]
-- [Microsoft.Orleans.Runtime.Abstractions]
-- [Microsoft.Orleans.Server]
-- [Microsoft.Orleans.TestingHost]
+--> https://www.nuget.org/packages?q=Microsoft.Extensions.Logging
+- [Microsoft.Extensions.Logging.Console] -> Client & Silo
+- [Microsoft.Extensions.Logging.Abstractions] -> Grain
 
------
+--> https://www.nuget.org/packages?q=Microsoft.Orleans
+- [Microsoft.Orleans.Client] -> Client
+- [Microsoft.Orleans.CodeGenerator.MSBuild] -> Interface & Grain
+- [Microsoft.Orleans.Core] -> Grain
+- [Microsoft.Orleans.Core.Abstractions] -> Interface & Grain
+- [Microsoft.Orleans.Runtime.Abstractions] -> Interface
+- [Microsoft.Orleans.Server] -> Silo
+- [Microsoft.Orleans.TestingHost] -> Test
 
-### Server Side: - Silo
-```
-$ dotnet run --project Silo/Silo.csproj
-```
-
-### Client Side: - Client
-```
-$ dotnet run --project Client/Client.csproj
-```
-
-### Tests: - Tests
-```
-$ dotnet test
-```
-
-## Structure
+# Structure
 ```
 Project
 ├── Client
@@ -66,4 +52,19 @@ Note: As a silo add assemblies, it does not need to add every grain ;)
 
 ```
 PS> .\build-and-run.ps1
+```
+
+### Server Side: - Silo
+```
+$ dotnet run --project Silo/Silo.csproj
+```
+
+### Client Side: - Client
+```
+$ dotnet run --project Client/Client.csproj
+```
+
+### Tests: - Tests
+```
+$ dotnet test
 ```
