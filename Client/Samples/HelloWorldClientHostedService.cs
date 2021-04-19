@@ -1,5 +1,8 @@
+using GrainInterfaces;
 using Microsoft.Extensions.Hosting;
 using Orleans;
+using Orleans.Runtime;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,11 +17,23 @@ namespace Client
       _client = client;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-      HelloWorld.ManyHello(_client);
+      // IHello
+      var friend = _client.GetGrain<IHello>(0);
+      var response = await friend.SayHello($"Good morning!");
+      Console.WriteLine($"\n\n{response}\n\n");
 
-      return Task.CompletedTask;
+      //IHelloArchive
+      var g = _client.GetGrain<IHelloArchive>(0);
+      response = await g.SayHello("Good day!");
+      Console.WriteLine($"{response}");
+
+      response = await g.SayHello("Good bye!");
+      Console.WriteLine($"{response}");
+
+      var greetings = await g.GetGreetings();
+      Console.WriteLine($"\nArchived greetings: {Utils.EnumerableToString(greetings)}");
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
