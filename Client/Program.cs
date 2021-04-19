@@ -1,19 +1,44 @@
 ﻿using GrainInterfaces;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace Client
 {
   public class Program
   {
-    public static int Main(string[] args)
+    public static Task Main(string[] args)
     {
-      return RunMainAsync().Result;
+      return StartHostBuilder().RunConsoleAsync();
     }
 
+    private static IHostBuilder StartHostBuilder()
+    {
+      return new HostBuilder()
+        .ConfigureServices(services =>
+        {
+          services.AddSingleton<ClusterClientHostedService>();
+          services.AddSingleton<IHostedService>(_ => _.GetService<ClusterClientHostedService>());
+          services.AddSingleton(_ => _.GetService<ClusterClientHostedService>().Client);
+
+          services.AddHostedService<HelloWorldClientHostedService>();
+          services.AddHostedService<PrimeClientHostedService>();
+
+          services.Configure<ConsoleLifetimeOptions>(options =>
+          {
+            options.SuppressStatusMessages = true;
+          });
+        })
+        .ConfigureLogging(builder => { builder.AddConsole(); });
+    }
+
+    [Obsolete("Orleans 2.2")]
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Maintain Knowledge")]
     private static async Task<int> RunMainAsync()
     {
       try
@@ -54,10 +79,10 @@ namespace Client
       }
     }
 
+    [Obsolete("Orleans 2.2")]
     private static async Task<IClusterClient> ConnectClient()
     {
-      IClusterClient client;
-      client = new ClientBuilder()
+      IClusterClient client = new ClientBuilder()
           .UseLocalhostClustering()
           .Configure_ClusterOptions()
           .ConfigureLogging(logging => logging.AddConsole())

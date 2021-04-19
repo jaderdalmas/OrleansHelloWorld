@@ -9,6 +9,12 @@ namespace Grains.Storage
 {
   public static class FileSiloBuilderExtensions
   {
+    public static ISiloBuilder AddFileGrainStorage(this ISiloBuilder builder, string providerName, Action<FileGrainStorageOptions> options)
+    {
+      return builder.ConfigureServices(services => services.AddFileGrainStorage(providerName, options));
+    }
+
+    [Obsolete("Orleans 2.2")]
     public static ISiloHostBuilder AddFileGrainStorage(this ISiloHostBuilder builder, string providerName, Action<FileGrainStorageOptions> options)
     {
       return builder.ConfigureServices(services => services.AddFileGrainStorage(providerName, options));

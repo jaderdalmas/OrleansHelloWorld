@@ -1,12 +1,15 @@
 ﻿using GrainInterfaces;
 using Grains;
 using Grains.Storage;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Hosting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -15,11 +18,39 @@ namespace Silo
 {
   public class Program
   {
-    public static int Main(string[] args)
+    [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Program Main Method")]
+    public static Task Main(string[] args)
     {
-      return RunMainAsync().Result;
+      return StartHostBuilder().RunConsoleAsync();
     }
 
+    private static IHostBuilder StartHostBuilder()
+    {
+      return new HostBuilder()
+        .UseOrleans(builder =>
+        {
+          builder
+              .UseLocalhostClustering()
+              .Configure_ClusterOptions()
+              .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
+              .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
+              .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
+              {
+                opts.RootDirectory = "./TestFiles";
+              });
+        })
+        .ConfigureServices(services =>
+        {
+          services.Configure<ConsoleLifetimeOptions>(options =>
+          {
+            options.SuppressStatusMessages = true;
+          });
+        })
+        .ConfigureLogging(builder => { builder.AddConsole(); });
+    }
+
+    [Obsolete("Orleans 2.2")]
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Maintain Knowledge")]
     private static async Task<int> RunMainAsync()
     {
       try
@@ -39,6 +70,7 @@ namespace Silo
       }
     }
 
+    [Obsolete("Orleans 2.2")]
     private static async Task<ISiloHost> StartSilo()
     {
       // define the cluster configuration
