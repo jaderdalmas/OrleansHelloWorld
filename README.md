@@ -5,7 +5,6 @@ It all started with a Hello World, but then the learning process begins ...
 2) Primes
 
 ### Tools:
-This project was developed using: 
 - **.Net Core 3.1**: to write the code; -> https://dotnet.microsoft.com/download/dotnet/3.1
 - **Orleans 3.4**: to support the code; -> https://dotnet.github.io/orleans/index.html
 - **xUnit 2.4 & Moq 4.16**: to test the code;
@@ -66,5 +65,5 @@ Project
 Note: As a silo add assemblies, it does not need to add every grain ;)
 
 ```
-PS> '.\build-and-run.ps1'
+PS> .\build-and-run.ps1
 ```
