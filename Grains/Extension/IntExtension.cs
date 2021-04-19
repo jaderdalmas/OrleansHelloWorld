@@ -1,4 +1,4 @@
-﻿namespace GrainInterfaces
+﻿namespace Grains
 {
   public static class IntExtension
   {
