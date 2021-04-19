@@ -50,6 +50,7 @@ Project
 
 Note: As a silo add assemblies, it does not need to add every grain ;)
 
+### Build and run the sample in Windows
 ```
 PS> .\build-and-run.ps1
 ```
