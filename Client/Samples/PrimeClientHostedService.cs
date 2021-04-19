@@ -16,7 +16,9 @@ namespace Client
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-      Prime.ManyPrime(_client);
+      Task.Delay(10000);
+
+      Prime.ManyPrime(_client, 1);
 
       return Task.CompletedTask;
     }

@@ -17,9 +17,9 @@ namespace Client
       Console.WriteLine($"\n\n{number} {isprime}\n\n");
     }
 
-    public static void ManyPrime(IClusterClient client)
+    public static void ManyPrime(IClusterClient client, int total = 100)
     {
-      for (int mil = 0; mil < 100; mil++)
+      for (int mil = 0; mil < total; mil++)
       {
         var tasks = new List<Task>();
 
