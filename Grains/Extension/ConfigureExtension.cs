@@ -1,6 +1,7 @@
 ﻿using GrainInterfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans.Hosting;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -17,6 +18,7 @@ namespace Grains
       });
     }
 
+    [Obsolete("Orleans 2.2")]
     public static ISiloHostBuilder Configure_Grains(this ISiloHostBuilder builder)
     {
       var assemblies = new List<Assembly>() {
