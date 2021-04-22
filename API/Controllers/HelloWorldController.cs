@@ -18,7 +18,8 @@ namespace API.Controllers
     public async Task<string> Get(string greeting = "HelloWorld!")
     {
       var grain = _client.GetGrain<IHello>(0);
-      return await grain.SayHello(greeting);
+      var result = await grain.SayHello(greeting);
+      return string.IsNullOrWhiteSpace(result) ? null : result;
     }
   }
 }
