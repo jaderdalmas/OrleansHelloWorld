@@ -14,12 +14,12 @@ namespace Client
   {
     public static Task Main(string[] args)
     {
-      return StartHostBuilder().RunConsoleAsync();
+      return StartHostBuilder(args).RunConsoleAsync();
     }
 
-    private static IHostBuilder StartHostBuilder()
+    private static IHostBuilder StartHostBuilder(string[] args)
     {
-      return new HostBuilder()
+      return Host.CreateDefaultBuilder(args)
         .ConfigureServices(services =>
         {
           services.AddSingleton<ClusterClientHostedService>();

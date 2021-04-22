@@ -1,5 +1,4 @@
 ﻿using GrainInterfaces;
-using Grains;
 using Grains.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,26 +17,25 @@ namespace Silo
 {
   public class Program
   {
-    [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Program Main Method")]
     public static Task Main(string[] args)
     {
-      return StartHostBuilder().RunConsoleAsync();
+      return StartHostBuilder(args).RunConsoleAsync();
     }
 
-    private static IHostBuilder StartHostBuilder()
+    private static IHostBuilder StartHostBuilder(string[] args)
     {
-      return new HostBuilder()
+      return Host.CreateDefaultBuilder(args)
         .UseOrleans(builder =>
         {
           builder
-              .UseLocalhostClustering()
-              .Configure_ClusterOptions()
-              .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-              .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
-              .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
-              {
-                opts.RootDirectory = "./TestFiles";
-              });
+          .UseLocalhostClustering()
+          .Configure_ClusterOptions()
+          .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
+          .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
+          .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
+          {
+            opts.RootDirectory = "./TestFiles";
+          });
         })
         .ConfigureServices(services =>
         {
@@ -75,15 +73,15 @@ namespace Silo
     {
       // define the cluster configuration
       var builder = new SiloHostBuilder()
-          .UseLocalhostClustering()
-          .Configure_ClusterOptions()
-          .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-          .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
-          .ConfigureLogging(logging => logging.AddConsole())
-          .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
-          {
-            opts.RootDirectory = "./TestFiles";
-          });
+        .UseLocalhostClustering()
+        .Configure_ClusterOptions()
+        .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
+        .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
+        .ConfigureLogging(logging => logging.AddConsole())
+        .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
+        {
+          opts.RootDirectory = "./TestFiles";
+        });
 
       var host = builder.Build();
       await host.StartAsync();
