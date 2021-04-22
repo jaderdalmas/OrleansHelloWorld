@@ -32,7 +32,7 @@ namespace Grains
         logger.LogInformation($"{number} is prime and is on the list");
         return Task.FromResult(true);
       }
-      
+
       var _primesqrt = State.GetPrimes(number);
       foreach (var prime in _primesqrt.AsParallel())
         if (number.IsDivisible(prime))

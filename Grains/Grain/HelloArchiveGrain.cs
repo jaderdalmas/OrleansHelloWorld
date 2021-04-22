@@ -14,7 +14,8 @@ namespace Grains
     public HelloArchiveGrain([PersistentState("archive", AppConst.Storage)] IPersistentState<GreetingArchive> archive)
     {
       _archive = archive;
-      _archive.ClearStateAsync().Wait();
+
+      try { _archive.ClearStateAsync().Wait(); } catch { }
     }
 
     public async Task<string> SayHello(string greeting)
