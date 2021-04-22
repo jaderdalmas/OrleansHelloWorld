@@ -10,7 +10,7 @@ namespace Grains.Storage
   {
     internal static IGrainStorage Create(IServiceProvider services, string name)
     {
-      IOptionsSnapshot<FileGrainStorageOptions> optionsSnapshot = services.GetRequiredService<IOptionsSnapshot<FileGrainStorageOptions>>();
+      IOptionsMonitor<FileGrainStorageOptions> optionsSnapshot = services.GetRequiredService<IOptionsMonitor<FileGrainStorageOptions>>();
       return ActivatorUtilities.CreateInstance<FileGrainStorage>(services, name, optionsSnapshot.Get(name), services.GetProviderClusterOptions(name));
     }
   }
