@@ -35,7 +35,9 @@ namespace Silo
           .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
           {
             opts.RootDirectory = "./TestFiles";
-          });
+          })
+          .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
+          .AddMemoryGrainStorage(Grains.AppConst.PSStore);
         })
         .ConfigureServices(services =>
         {

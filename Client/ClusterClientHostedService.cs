@@ -1,6 +1,8 @@
+using GrainInterfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Hosting;
 using Orleans.Runtime;
 using System;
 using System.Threading;
@@ -17,6 +19,7 @@ namespace Client
       _logger = logger;
       Client = new ClientBuilder()
         .UseLocalhostClustering()
+        .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
         .ConfigureLogging(builder => builder.AddProvider(loggerProvider))
         .Build();
     }
