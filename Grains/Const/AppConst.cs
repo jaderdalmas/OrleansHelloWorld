@@ -7,5 +7,7 @@ namespace Grains
     public static Assembly Assembly => typeof(HelloGrain).Assembly;
 
     public const string Storage = "File";
+
+    public const string PSStore = "PubSubStore";
   }
 }
