@@ -37,6 +37,15 @@ namespace GrainInterfaces
       });
     }
 
+    public static IClientBuilder Configure_Grains(this IClientBuilder builder, IEnumerable<Assembly> assemblies)
+    {
+      return builder.ConfigureApplicationParts(parts =>
+      {
+        foreach (var assembly in assemblies)
+          parts.AddApplicationPart(assembly).WithReferences();
+      });
+    }
+
     public static ISiloBuilder Configure_Grains(this ISiloBuilder builder, IEnumerable<Assembly> assemblies)
     {
       return builder.ConfigureApplicationParts(parts =>

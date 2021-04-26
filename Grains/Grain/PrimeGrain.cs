@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
+using Orleans.Streams;
+using Orleans.Streams.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,13 +11,18 @@ using System.Threading.Tasks;
 
 namespace Grains
 {
+  [ImplicitStreamSubscription(GrainInterfaces.AppConst.PSPrime)]
   [StorageProvider(ProviderName = AppConst.Storage)]
-  public class PrimeGrain : Grain<PrimeState>, IPrime
+  public class PrimeGrain : Grain<PrimeState>, IPrime, IStreamSubscriptionObserver
   {
     private readonly ILogger logger;
+    private readonly PrimeObserver observer;
+
     public PrimeGrain(ILogger<PrimeGrain> logger)
     {
       this.logger = logger;
+
+      observer = new PrimeObserver(logger, (int number) => IsPrime(number));
     }
 
     public override Task OnActivateAsync()
@@ -25,7 +32,13 @@ namespace Grains
       return base.OnActivateAsync();
     }
 
-    Task<bool> IPrime.IsPrime(int number)
+    public async Task OnSubscribed(IStreamSubscriptionHandleFactory handleFactory)
+    {
+      var handle = handleFactory.Create<int>();
+      await handle.ResumeAsync(observer);
+    }
+
+    public Task<bool> IsPrime(int number)
     {
       if (State.HasPrime(number))
       {
@@ -47,6 +60,28 @@ namespace Grains
 
       return Task.FromResult(true);
     }
+  }
+
+  public class PrimeObserver : IAsyncObserver<int>
+  {
+    private readonly ILogger logger;
+    private readonly Func<int, Task> action;
+
+    public PrimeObserver(ILogger<IPrime> logger, Func<int, Task> action)
+    {
+      this.logger = logger;
+      this.action = action;
+    }
+
+    public Task OnCompletedAsync() => Task.CompletedTask;
+
+    public Task OnErrorAsync(Exception ex)
+    {
+      logger.LogError(ex, ex.Message);
+      return Task.CompletedTask;
+    }
+
+    public Task OnNextAsync(int item, StreamSequenceToken token = null) => action(item);
   }
 
   public class PrimeState : IDisposable
