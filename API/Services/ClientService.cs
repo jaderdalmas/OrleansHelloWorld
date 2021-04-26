@@ -22,7 +22,7 @@ namespace API.Services
       _logger = logger;
       Client = new ClientBuilder()
         .UseLocalhostClustering()
-        .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
+        //.Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
         .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
         .ConfigureLogging(builder => builder.AddProvider(loggerProvider))
         .Build();

@@ -23,19 +23,16 @@ namespace API.Controllers
     }
 
     [HttpGet]
-    public async void RunHellos()
+    public async Task RunHellos()
     {
       var grain = _client.GetGrain<IHello>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      await grain.Consume();
       var stream = _client.GetStreamProvider(AppConst.SMSProvider)
         .GetStream<string>(key, AppConst.PSHello);
 
       for (int i = 1; i < 10; i++)
         await stream.OnNextAsync($"Good morning, {i}!");
-
-      return;
     }
   }
 }

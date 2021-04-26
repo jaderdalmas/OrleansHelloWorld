@@ -1,9 +1,6 @@
 ﻿using GrainInterfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Orleans;
-using Orleans.Streams;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -26,12 +23,11 @@ namespace API.Controllers
     }
 
     [HttpGet]
-    public async Task RunPrimes()
+    public Task RunPrimes()
     {
       var grain = _client.GetGrain<IPrime>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      await grain.Consume();
       var stream = _client.GetStreamProvider(AppConst.SMSProvider)
         .GetStream<int>(key, AppConst.PSPrime);
 
@@ -51,6 +47,8 @@ namespace API.Controllers
 
         Task.WaitAll(tasks.ToArray());
       }
+
+      return Task.CompletedTask;
     }
   }
 }
