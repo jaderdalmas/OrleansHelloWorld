@@ -12,11 +12,9 @@ namespace API.Controllers
   [ApiController, Route("[controller]")]
   public class PrimeController : ControllerBase
   {
-    private readonly ILogger _logger;
     private readonly IClusterClient _client;
-    public PrimeController(ILogger<HelloWorldController> logger, IClusterClient client)
+    public PrimeController(IClusterClient client)
     {
-      _logger = logger;
       _client = client;
     }
 
@@ -33,12 +31,9 @@ namespace API.Controllers
       var grain = _client.GetGrain<IPrime>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      var response = await grain.IsPrime(99);
-      Console.WriteLine($"IsPrime: {response}");
-
+      await grain.Consume();
       var stream = _client.GetStreamProvider(AppConst.SMSProvider)
         .GetStream<int>(key, AppConst.PSPrime);
-      //await stream.SubscribeAsync(OnNextAsync);
 
       for (int mil = 0; mil < 1; mil++)
       {
@@ -56,12 +51,6 @@ namespace API.Controllers
 
         Task.WaitAll(tasks.ToArray());
       }
-    }
-
-    private Task OnNextAsync(int item, StreamSequenceToken token = null)
-    {
-      _logger.LogInformation($"OnNextAsync: item: {item}, token = {token}");
-      return Task.CompletedTask;
     }
   }
 }

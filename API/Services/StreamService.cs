@@ -26,9 +26,7 @@ namespace API.Services
       var grain = _client.GetGrain<IPrime>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      var response = await grain.IsPrime(99);
-      Console.WriteLine($"IsPrime: {response}");
-
+      await grain.Consume();
       var stream = _client.GetStreamProvider(AppConst.SMSProvider)
         .GetStream<int>(key, AppConst.PSPrime);
       await stream.SubscribeAsync(OnNextAsync);
