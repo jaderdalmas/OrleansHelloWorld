@@ -9,18 +9,24 @@ using System.Threading.Tasks;
 namespace Grains
 {
   [ImplicitStreamSubscription(GrainInterfaces.AppConst.PSHello)]
-  public class HelloGrain : Grain, IHello, IStreamSubscriptionObserver
+  public class HelloGrain : Grain, IHello
   {
-    private readonly ILogger logger;
+    private readonly ILogger _logger;
     private readonly HelloObserver observer;
     private int _counter;
 
     public HelloGrain(ILogger<IHello> logger)
     {
-      this.logger = logger;
+      _logger = logger;
       observer = new HelloObserver(logger, (string greeting) => SayHello(greeting));
 
       _counter = 0;
+    }
+
+    public Task Consume()
+    {
+      _logger.LogInformation("Starting to consume...");
+      return Task.CompletedTask;
     }
 
     public async Task OnSubscribed(IStreamSubscriptionHandleFactory handleFactory)
@@ -34,7 +40,7 @@ namespace Grains
       var counter = $"{++_counter} times!";
       var time = $"Time: {DateTime.UtcNow.ToFileTimeUtc()}";
 
-      logger.LogInformation($"\n [SayHello] {counter} | greeting = '{greeting}' | {time}");
+      _logger.LogInformation($"\n [SayHello] {counter} | greeting = '{greeting}' | {time}");
       return Task.FromResult($"\n Client: '{greeting}' | Grain: Hello {counter} | {time}");
     }
   }

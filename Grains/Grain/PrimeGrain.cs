@@ -13,16 +13,22 @@ namespace Grains
 {
   [ImplicitStreamSubscription(GrainInterfaces.AppConst.PSPrime)]
   [StorageProvider(ProviderName = AppConst.Storage)]
-  public class PrimeGrain : Grain<PrimeState>, IPrime, IStreamSubscriptionObserver
+  public class PrimeGrain : Grain<PrimeState>, IPrime
   {
-    private readonly ILogger logger;
+    private readonly ILogger _logger;
     private readonly PrimeObserver observer;
 
     public PrimeGrain(ILogger<PrimeGrain> logger)
     {
-      this.logger = logger;
+      _logger = logger;
 
       observer = new PrimeObserver(logger, (int number) => IsPrime(number));
+    }
+
+    public Task Consume()
+    {
+      _logger.LogInformation("Starting to consume...");
+      return Task.CompletedTask;
     }
 
     public override Task OnActivateAsync()
@@ -42,7 +48,7 @@ namespace Grains
     {
       if (State.HasPrime(number))
       {
-        logger.LogInformation($"{number} is prime and is on the list");
+        _logger.LogInformation($"{number} is prime and is on the list");
         return Task.FromResult(true);
       }
 
@@ -50,11 +56,11 @@ namespace Grains
       foreach (var prime in _primesqrt.AsParallel())
         if (number.IsDivisible(prime))
         {
-          logger.LogInformation($"{number} is not prime, divisible by {prime}");
+          _logger.LogInformation($"{number} is not prime, divisible by {prime}");
           return Task.FromResult(false);
         }
 
-      logger.LogInformation($"{number} is prime and will be added on the list");
+      _logger.LogInformation($"{number} is prime and will be added on the list");
 
       State.AddPrime(number, WriteStateAsync);
 
