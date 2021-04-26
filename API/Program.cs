@@ -1,3 +1,4 @@
+
 using GrainInterfaces;
 using Grains.Storage;
 using Microsoft.AspNetCore.Hosting;
@@ -9,14 +10,15 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace API
 {
   public class Program
   {
-    public static void Main(string[] args)
+    public static Task Main(string[] args)
     {
-      CreateHostBuilder(args).Build().Run();
+      return CreateHostBuilder(args).Build().RunAsync();
     }
 
     public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -32,6 +34,13 @@ namespace API
         .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
         {
           opts.RootDirectory = "./TestFiles";
+        })
+        .AddMemoryGrainStorageAsDefault()
+        .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
+        .AddMemoryGrainStorage(Grains.AppConst.PSStore);
+        .UseDashboard(options =>
+        {
+          options.HideTrace = true;
         });
       })
       .ConfigureWebHostDefaults(webBuilder =>
