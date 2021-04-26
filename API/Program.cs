@@ -37,7 +37,7 @@ namespace API
         })
         .AddMemoryGrainStorageAsDefault()
         .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
-        .AddMemoryGrainStorage(Grains.AppConst.PSStore);
+        .AddMemoryGrainStorage(Grains.AppConst.PSStore)
         .UseDashboard(options =>
         {
           options.HideTrace = true;
