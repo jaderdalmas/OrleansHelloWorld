@@ -1,5 +1,6 @@
 ﻿using GrainInterfaces;
 using Grains.Storage;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -37,7 +38,11 @@ namespace Silo
             opts.RootDirectory = "./TestFiles";
           })
           .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
-          .AddMemoryGrainStorage(Grains.AppConst.PSStore);
+          .AddMemoryGrainStorage(Grains.AppConst.PSStore)
+          .UseDashboard(options =>
+          {
+            options.HideTrace = true;
+          });
         })
         .ConfigureServices(services =>
         {
