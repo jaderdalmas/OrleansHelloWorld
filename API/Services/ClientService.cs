@@ -6,8 +6,6 @@ using Orleans;
 using Orleans.Hosting;
 using Orleans.Runtime;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,38 +31,30 @@ namespace API.Services
       var attempt = 0;
       var maxAttempts = 100;
       var delay = TimeSpan.FromSeconds(1);
+      var message = "Failed to connect to Orleans cluster on attempt {@Attempt} of {@MaxAttempts}.";
       return Client.Connect(async error =>
       {
         if (cancellationToken.IsCancellationRequested)
+          return false;
+
+        if (attempt++ > maxAttempts)
+        {
+          _logger.LogError(error, message, attempt, maxAttempts);
+
+          return false;
+        }
+
+        _logger.LogWarning(error, message, attempt, maxAttempts);
+        try
+        {
+          await Task.Delay(delay, cancellationToken);
+        }
+        catch (OperationCanceledException)
         {
           return false;
         }
 
-        if (++attempt < maxAttempts)
-        {
-          _logger.LogWarning(error,
-            "Failed to connect to Orleans cluster on attempt {@Attempt} of {@MaxAttempts}.",
-            attempt, maxAttempts);
-
-          try
-          {
-            await Task.Delay(delay, cancellationToken);
-          }
-          catch (OperationCanceledException)
-          {
-            return false;
-          }
-
-          return true;
-        }
-        else
-        {
-          _logger.LogError(error,
-            "Failed to connect to Orleans cluster on attempt {@Attempt} of {@MaxAttempts}.",
-            attempt, maxAttempts);
-
-          return false;
-        }
+        return true;
       });
     }
 
@@ -83,9 +73,9 @@ namespace API.Services
     public IClusterClient Client { get; }
   }
 
-  public static class ClusterServiceBuilderExtensions
+  public static class ClientServiceExtensions
   {
-    public static IServiceCollection AddClusterService(this IServiceCollection services)
+    public static IServiceCollection AddClientService(this IServiceCollection services)
     {
       services.AddSingleton<ClientService>();
       services.AddSingleton<IHostedService>(_ => _.GetService<ClientService>());
