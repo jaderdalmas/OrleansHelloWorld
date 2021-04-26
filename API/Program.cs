@@ -23,26 +23,26 @@ namespace API
 
     public static IHostBuilder CreateHostBuilder(string[] args) =>
       Host.CreateDefaultBuilder(args)
-      .UseOrleans(siloBuilder =>
-      {
-        siloBuilder
-        .UseLocalhostClustering()
-        //.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromMinutes(1))
-        .Configure_ClusterOptions()
-        .Configure<EndpointOptions>(opts => { opts.AdvertisedIPAddress = IPAddress.Loopback; })
-        .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
-        .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
-        {
-          opts.RootDirectory = "./TestFiles";
-        })
-        .AddMemoryGrainStorageAsDefault()
-        .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
-        .AddMemoryGrainStorage(Grains.AppConst.PSStore)
-        .UseDashboard(options =>
-        {
-          options.HideTrace = true;
-        });
-      })
+      //.UseOrleans(siloBuilder =>
+      //{
+      //  siloBuilder
+      //  .UseLocalhostClustering()
+      //  //.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromMinutes(1))
+      //  .Configure_ClusterOptions()
+      //  .Configure<EndpointOptions>(opts => { opts.AdvertisedIPAddress = IPAddress.Loopback; })
+      //  .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
+      //  .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
+      //  {
+      //    opts.RootDirectory = "./TestFiles";
+      //  })
+      //  .AddMemoryGrainStorageAsDefault()
+      //  .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
+      //  .AddMemoryGrainStorage(Grains.AppConst.PSStore)
+      //  .UseDashboard(options =>
+      //  {
+      //    options.HideTrace = true;
+      //  });
+      //})
       .ConfigureWebHostDefaults(webBuilder =>
       {
         webBuilder.UseStartup<Startup>()
