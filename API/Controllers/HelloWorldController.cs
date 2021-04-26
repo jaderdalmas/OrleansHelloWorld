@@ -35,7 +35,7 @@ namespace API.Controllers
       var grain = _client.GetGrain<IHello>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      var response = await grain.SayHello("Testanu");
+      var response = await grain.SayHello("Testing");
       Console.WriteLine($"{response}");
 
       var stream = _client.GetStreamProvider(AppConst.SMSProvider)
