@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Streams;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -50,6 +51,7 @@ namespace API.Services
       return Task.CompletedTask;
     }
 
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Pending>")]
     private Task OnNextAsync(int item, StreamSequenceToken token = null)
     {
       _logger.LogInformation($"OnNextAsync: item: {item}, token = {token}");
