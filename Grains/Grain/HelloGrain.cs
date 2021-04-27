@@ -23,12 +23,6 @@ namespace Grains
       _counter = 0;
     }
 
-    public Task Consume()
-    {
-      _logger.LogInformation("Starting to consume...");
-      return Task.CompletedTask;
-    }
-
     public async Task OnSubscribed(IStreamSubscriptionHandleFactory handleFactory)
     {
       var handle = handleFactory.Create<string>();

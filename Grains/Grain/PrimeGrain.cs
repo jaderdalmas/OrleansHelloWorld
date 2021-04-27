@@ -25,12 +25,6 @@ namespace Grains
       observer = new PrimeObserver(logger, (int number) => IsPrime(number));
     }
 
-    public Task Consume()
-    {
-      _logger.LogInformation("Starting to consume...");
-      return Task.CompletedTask;
-    }
-
     public override Task OnActivateAsync()
     {
       State.Initialize(WriteStateAsync);
