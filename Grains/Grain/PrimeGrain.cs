@@ -31,12 +31,18 @@ namespace Grains
       State.Initialize(WriteStateAsync);
 
       // initialize the value
-      Value = VersionedValue<int>.None.NextVersion(0);
+      _value = VersionedValue<int>.None.NextVersion(0);
 
       // initialize the polling wait handle
-      Wait = new TaskCompletionSource<VersionedValue<int>>();
+      _wait = new TaskCompletionSource<VersionedValue<int>>();
 
       return base.OnActivateAsync();
+    }
+
+    public Task Consume()
+    {
+      _logger.LogInformation("Starting to consume...");
+      return Task.CompletedTask;
     }
 
     public async Task OnSubscribed(IStreamSubscriptionHandleFactory handleFactory)
@@ -71,29 +77,29 @@ namespace Grains
     }
 
     #region RC
-    public VersionedValue<int> Value { get; set; }
-    public TaskCompletionSource<VersionedValue<int>> Wait { get; set; }
+    private VersionedValue<int> _value;
+    private TaskCompletionSource<VersionedValue<int>> _wait;
 
-    public Task<VersionedValue<int>> GetAsync() => Task.FromResult(Value);
+    public Task<VersionedValue<int>> GetAsync() => Task.FromResult(_value);
 
     public Task UpdateAsync(int value)
     {
       var key = this.GetPrimaryKeyLong();
       // update the state
-      Value = Value.NextVersion(value);
-      _logger.LogInformation($"{nameof(PrimeGrain)} {key} updated value to {Value.Value} with version {Value.Version}");
+      _value = _value.NextVersion(value);
+      _logger.LogInformation($"{nameof(PrimeGrain)} {key} updated value to {_value.Value} with version {_value.Version}");
 
       // fulfill waiting promises
-      Wait.SetResult(Value);
-      Wait = new TaskCompletionSource<VersionedValue<int>>();
+      _wait.SetResult(_value);
+      _wait = new TaskCompletionSource<VersionedValue<int>>();
 
       return Task.CompletedTask;
     }
 
     public Task<VersionedValue<int>> LongPollAsync(VersionToken knownVersion) =>
-            knownVersion == Value.Version
-            ? Wait.Task.WithDefaultOnTimeout(TimeSpan.FromSeconds(5), VersionedValue<int>.None)
-            : Task.FromResult(Value);
+            knownVersion == _value.Version
+            ? _wait.Task.WithDefaultOnTimeout(TimeSpan.Zero, VersionedValue<int>.None)
+            : Task.FromResult(_value);
     #endregion
   }
 

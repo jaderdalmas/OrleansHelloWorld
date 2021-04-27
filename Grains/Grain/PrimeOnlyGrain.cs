@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Grains
 {
-  public class PrimeOnlyGrain : Grain, IPrimeOnlyGrain
+  public class PrimeOnlyGrain : Grain, IPrimeOnly
   {
     private readonly ILogger _logger;
 
@@ -22,12 +22,12 @@ namespace Grains
       // start long polling
       var func = this.RegisterRCPoolAsync(
           () => GrainFactory.GetGrain<IPrime>(key).GetAsync(),
-          () => GrainFactory.GetGrain<IPrime>(key).LongPollAsync(Cache.Version),
+          () => GrainFactory.GetGrain<IPrime>(key).LongPollAsync(_cache.Version),
           result => result.IsValid,
           apply =>
           {
-            Cache = apply;
-            _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {Cache.Value} with version {Cache.Version}");
+            _cache = apply;
+            _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {_cache.Value} with version {_cache.Version}");
             return Task.CompletedTask;
           },
           failed =>
@@ -35,15 +35,20 @@ namespace Grains
             _logger.LogWarning("The reactive poll timed out by returning a 'none' response before Orleans could break the promise.");
             return Task.CompletedTask;
           });
-
-      Pool = RegisterTimer(_ => func, null, TimeSpan.Zero, TimeSpan.FromTicks(1));
+      _pool = RegisterTimer(_ => func, null, TimeSpan.Zero, TimeSpan.FromTicks(1));
 
       await base.OnActivateAsync();
     }
 
-    public VersionedValue<int> Cache { get; set; }
-    public IDisposable Pool { get; set; }
+    public Task Consume()
+    {
+      _logger.LogInformation("Starting to consume...");
+      return Task.CompletedTask;
+    }
 
-    public Task<int> GetAsync() => Task.FromResult(Cache.Value);
+    private VersionedValue<int> _cache;
+    private IDisposable _pool;
+
+    public Task<int> GetAsync() => Task.FromResult(_cache.Value);
   }
 }
