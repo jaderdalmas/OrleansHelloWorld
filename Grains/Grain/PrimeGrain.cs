@@ -1,4 +1,5 @@
 ﻿using GrainInterfaces;
+using GrainInterfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
@@ -16,13 +17,13 @@ namespace Grains
   public class PrimeGrain : Grain<PrimeState>, IPrime
   {
     private readonly ILogger _logger;
-    private readonly PrimeObserver observer;
+    private readonly PrimeObserver<int> observer;
 
     public PrimeGrain(ILogger<PrimeGrain> logger)
     {
       _logger = logger;
 
-      observer = new PrimeObserver(logger, (int number) => IsPrime(number));
+      observer = new PrimeObserver<int>(logger, (int number) => IsPrime(number));
     }
 
     public override Task OnActivateAsync()
@@ -43,6 +44,7 @@ namespace Grains
       if (State.HasPrime(number))
       {
         _logger.LogInformation($"{number} is prime and is on the list");
+        (this as IReactiveCacheFrom<int>).UpdateAsync(number);
         return Task.FromResult(true);
       }
 
@@ -57,17 +59,54 @@ namespace Grains
       _logger.LogInformation($"{number} is prime and will be added on the list");
 
       State.AddPrime(number, WriteStateAsync);
+      (this as IReactiveCacheFrom<int>).UpdateAsync(number);
 
       return Task.FromResult(true);
     }
+
+    #region RC
+    VersionedValue<int> IReactiveCacheFrom<int>.Value { get; set; }
+    private VersionedValue<int> Value
+    {
+      get => (this as IReactiveCacheFrom<int>).Value;
+      set => (this as IReactiveCacheFrom<int>).Value = value;
+    }
+    TaskCompletionSource<VersionedValue<int>> IReactiveCacheFrom<int>.Wait { get; set; }
+    private TaskCompletionSource<VersionedValue<int>> Wait
+    {
+      get => (this as IReactiveCacheFrom<int>).Wait;
+      set => (this as IReactiveCacheFrom<int>).Wait = value;
+    }
+
+    public Task<VersionedValue<int>> GetAsync() => Task.FromResult(Value);
+
+    Task IReactiveCacheFrom<int>.UpdateAsync(int value)
+    {
+      var key = this.GetPrimaryKeyLong();
+      // update the state
+      Value = Value.NextVersion(value);
+      _logger.LogInformation($"{nameof(PrimeGrain)} {key} updated value to {Value.Value} with version {Value.Version}");
+
+      // fulfill waiting promises
+      Wait.SetResult(Value);
+      Wait = new TaskCompletionSource<VersionedValue<int>>();
+
+      return Task.CompletedTask;
+    }
+
+    public Task<VersionedValue<int>> LongPollAsync(VersionToken knownVersion) =>
+            knownVersion == Value.Version
+            ? Wait.Task.WithDefaultOnTimeout(TimeSpan.FromSeconds(5), VersionedValue<int>.None)
+            : Task.FromResult(Value);
+    #endregion
   }
 
-  public class PrimeObserver : IAsyncObserver<int>
+  public class PrimeObserver<T> : IAsyncObserver<T>
   {
     private readonly ILogger logger;
-    private readonly Func<int, Task> action;
+    private readonly Func<T, Task> action;
 
-    public PrimeObserver(ILogger<IPrime> logger, Func<int, Task> action)
+    public PrimeObserver(ILogger<IPrime> logger, Func<T, Task> action)
     {
       this.logger = logger;
       this.action = action;
@@ -81,7 +120,7 @@ namespace Grains
       return Task.CompletedTask;
     }
 
-    public Task OnNextAsync(int item, StreamSequenceToken token = null) => action(item);
+    public Task OnNextAsync(T item, StreamSequenceToken token = null) => action(item);
   }
 
   public class PrimeState : IDisposable

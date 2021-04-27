@@ -1,9 +1,10 @@
-﻿using Orleans.Streams.Core;
+﻿using Orleans;
+using Orleans.Streams.Core;
 using System.Threading.Tasks;
 
 namespace GrainInterfaces
 {
-  public interface IHello : Orleans.IGrainWithIntegerKey, IStreamSubscriptionObserver
+  public interface IHello : IGrainWithIntegerKey, IStreamSubscriptionObserver
   {
     Task<string> SayHello(string greeting);
   }
