@@ -5,8 +5,8 @@ namespace GrainInterfaces
 {
   public interface IReactiveCacheFrom<T>
   {
-    VersionedValue<T> Value { get; set; }
-    TaskCompletionSource<VersionedValue<T>> Wait { get; set; }
+    //VersionedValue<T> Value { get; set; }
+    //TaskCompletionSource<VersionedValue<T>> Wait { get; set; }
 
     /// <summary>
     /// Returns the current state without polling.
