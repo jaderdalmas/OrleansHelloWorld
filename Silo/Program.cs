@@ -42,6 +42,14 @@ namespace Silo
           .UseDashboard(options =>
           {
             options.HideTrace = true;
+          })
+          .AddStartupTask(async (provider, token) =>
+          {
+            var factory = provider.GetService<IGrainFactory>();
+            var client = provider.GetService<IClusterClient>();
+
+            await factory.GetGrain<IPrime>(0).Consume();
+            await factory.GetGrain<IPrimeOnly>(0).Consume();
           });
         })
         .ConfigureServices(services =>
