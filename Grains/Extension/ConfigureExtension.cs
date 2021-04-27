@@ -14,7 +14,9 @@ namespace Grains
       return builder.ConfigureServices(services =>
       {
         services.AddSingleton<IHello, HelloGrain>();
+        services.AddSingleton<IHelloArchive, HelloArchiveGrain>();
         services.AddSingleton<IPrime, PrimeGrain>();
+        services.AddSingleton<IPrimeOnlyGrain, PrimeOnlyGrain>();
       });
     }
 

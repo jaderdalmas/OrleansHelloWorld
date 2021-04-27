@@ -9,7 +9,9 @@ namespace Tests
     public void Configure(ISiloBuilder hostBuilder)
     {
       hostBuilder.Configure_Grains()
-        .AddMemoryGrainStorage(name: AppConst.Storage);
+        .AddMemoryGrainStorage(name: AppConst.Storage)
+        .AddSimpleMessageStreamProvider(GrainInterfaces.AppConst.SMSProvider)
+        .AddMemoryGrainStorage(AppConst.PSStore);
     }
   }
 }

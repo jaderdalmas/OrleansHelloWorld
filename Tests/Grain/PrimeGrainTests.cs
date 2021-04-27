@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Tests
 {
-  [Collection(ClusterCollection.Name)]
+  [Collection(nameof(ClusterCollection))]
   public class PrimeGrainTests
   {
     private readonly TestCluster _cluster;
