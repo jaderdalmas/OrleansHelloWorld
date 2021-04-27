@@ -30,6 +30,12 @@ namespace Grains
     {
       State.Initialize(WriteStateAsync);
 
+      // initialize the value
+      Value = VersionedValue<int>.None.NextVersion(0);
+
+      // initialize the polling wait handle
+      Wait = new TaskCompletionSource<VersionedValue<int>>();
+
       return base.OnActivateAsync();
     }
 
@@ -44,7 +50,7 @@ namespace Grains
       if (State.HasPrime(number))
       {
         _logger.LogInformation($"{number} is prime and is on the list");
-        (this as IReactiveCacheFrom<int>).UpdateAsync(number);
+        UpdateAsync(number);
         return Task.FromResult(true);
       }
 
@@ -59,28 +65,18 @@ namespace Grains
       _logger.LogInformation($"{number} is prime and will be added on the list");
 
       State.AddPrime(number, WriteStateAsync);
-      (this as IReactiveCacheFrom<int>).UpdateAsync(number);
+      UpdateAsync(number);
 
       return Task.FromResult(true);
     }
 
     #region RC
-    VersionedValue<int> IReactiveCacheFrom<int>.Value { get; set; }
-    private VersionedValue<int> Value
-    {
-      get => (this as IReactiveCacheFrom<int>).Value;
-      set => (this as IReactiveCacheFrom<int>).Value = value;
-    }
-    TaskCompletionSource<VersionedValue<int>> IReactiveCacheFrom<int>.Wait { get; set; }
-    private TaskCompletionSource<VersionedValue<int>> Wait
-    {
-      get => (this as IReactiveCacheFrom<int>).Wait;
-      set => (this as IReactiveCacheFrom<int>).Wait = value;
-    }
+    public VersionedValue<int> Value { get; set; }
+    public TaskCompletionSource<VersionedValue<int>> Wait { get; set; }
 
     public Task<VersionedValue<int>> GetAsync() => Task.FromResult(Value);
 
-    Task IReactiveCacheFrom<int>.UpdateAsync(int value)
+    public Task UpdateAsync(int value)
     {
       var key = this.GetPrimaryKeyLong();
       // update the state

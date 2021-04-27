@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Grains
 {
-  public class PrimeOnlyGrain : Grain, IGrainWithIntegerKey, IReactiveCacheTo<int>
+  public class PrimeOnlyGrain : Grain, IPrimeOnlyGrain
   {
     private readonly ILogger _logger;
 
@@ -41,17 +41,9 @@ namespace Grains
       await base.OnActivateAsync();
     }
 
-    VersionedValue<int> IReactiveCacheTo<int>.Cache { get; set; }
-    private VersionedValue<int> Cache
-    {
-      get => (this as IReactiveCacheTo<int>).Cache;
-      set => (this as IReactiveCacheTo<int>).Cache = value;
-    }
-    IDisposable IReactiveCacheTo<int>.Pool { get; set; }
-    private IDisposable Pool
-    {
-      get => (this as IReactiveCacheTo<int>).Pool;
-      set => (this as IReactiveCacheTo<int>).Pool = value;
-    }
+    public VersionedValue<int> Cache { get; set; }
+    public IDisposable Pool { get; set; }
+
+    public Task<int> GetAsync() => Task.FromResult(Cache.Value);
   }
 }
