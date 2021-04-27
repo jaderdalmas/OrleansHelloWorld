@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace GrainInterfaces
 {
-  public interface IPrime : IGrainWithIntegerKey, IStreamSubscriptionObserver, IReactiveCacheFrom<int>
+  public interface IPrime : IGrainWithIntegerKey, IStreamSubscriptionObserver, IReactiveCacheFrom<int>, IConsumer
   {
     Task<bool> IsPrime(int number);
   }
