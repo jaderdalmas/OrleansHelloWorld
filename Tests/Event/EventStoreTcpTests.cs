@@ -7,18 +7,19 @@ using Xunit;
 
 namespace Tests.Event
 {
-  public class EventStoreTests
+  public class EventStoreTcpTests
   {
     private IEventStoreConnection GetCnn()
     {
       return EventStoreConnection.Create(
-        new Uri("tcp://admin:changeit@localhost:2113?Tls=false"));
+        new Uri("tcp://admin:changeit@localhost:1113"));
     }
 
     private IEventStoreConnection LiveCnn()
     {
       var settingsBuilder = ConnectionSettings.Create();
-      settingsBuilder.SetDefaultUserCredentials(new UserCredentials("admin", "changeit"));
+      settingsBuilder.SetDefaultUserCredentials(
+        new UserCredentials("admin", "changeit"));
       settingsBuilder.SetCompatibilityMode("auto");
 
       var settings = settingsBuilder.Build();
@@ -29,11 +30,6 @@ namespace Tests.Event
         .SetClusterGossipPort(2113);
 
       return EventStoreConnection.Create(settings, clusterSettings);
-    }
-
-    private IEventStoreConnection CSCnn()
-    {
-      return EventStoreConnection.Create("esdb://localhost:2113?Tls=false");
     }
 
     [Fact]
