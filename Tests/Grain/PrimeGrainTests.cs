@@ -3,7 +3,7 @@ using Orleans.TestingHost;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Tests
+namespace Tests.Grain
 {
   [Collection(nameof(ClusterCollection))]
   public class PrimeGrainTests
