@@ -13,8 +13,6 @@ namespace Tests.Event
     [Fact]
     public async Task Read_Stream()
     {
-      var client = GetCnn();
-
       var data = new
       {
         EntityId = Guid.NewGuid().ToString("N"),
@@ -27,13 +25,13 @@ namespace Tests.Event
         JsonSerializer.SerializeToUtf8Bytes(data)
       );
 
-      await client.AppendToStreamAsync(
+      await _client.AppendToStreamAsync(
         TestStream,
         StreamState.Any,
         new[] { eventData }
       );
 
-      var result = client.ReadStreamAsync(
+      var result = _client.ReadStreamAsync(
         Direction.Forwards,
         TestStream,
         StreamPosition.Start
@@ -49,9 +47,7 @@ namespace Tests.Event
     [Fact]
     public Task Read_All()
     {
-      var client = GetCnn();
-
-      var result = client.ReadAllAsync(Direction.Forwards, Position.Start);
+      var result = _client.ReadAllAsync(Direction.Forwards, Position.Start);
 
       foreach (var vnt in result.ToEnumerable())
         Console.WriteLine(Encoding.UTF8.GetString(vnt.Event.Data.Span));

@@ -14,8 +14,6 @@ namespace Tests.Event
     [Fact]
     public async Task Append()
     {
-      var client = GetCnn();
-
       var evt = new
       {
         EntityId = Guid.NewGuid().ToString("N"),
@@ -28,7 +26,7 @@ namespace Tests.Event
         JsonSerializer.SerializeToUtf8Bytes(evt)
       );
 
-      await client.AppendToStreamAsync(
+      await _client.AppendToStreamAsync(
         TestStream,
         StreamState.Any,
         new[] { eventData }
@@ -38,8 +36,6 @@ namespace Tests.Event
     [Fact]
     public async Task Append_NoStream()
     {
-      var client = GetCnn();
-
       var evt = "{\"id\": \"1\" \"value\": \"some value\"}";
       var eventData = new EventData(
         Uuid.NewUuid(),
@@ -49,7 +45,7 @@ namespace Tests.Event
 
       try
       {
-        await client.AppendToStreamAsync(
+        await _client.AppendToStreamAsync(
           TestNoStream,
           StreamState.NoStream,
           new EventData[] { eventData }
@@ -64,8 +60,6 @@ namespace Tests.Event
     [Fact]
     public async Task Append_Only1()
     {
-      var client = GetCnn();
-
       var evt = "{\"id\": \"1\" \"value\": \"some value\"}";
       var eventData = new EventData(
         Uuid.NewUuid(),
@@ -73,13 +67,13 @@ namespace Tests.Event
         Encoding.UTF8.GetBytes(evt)
       );
 
-      await client.AppendToStreamAsync(
+      await _client.AppendToStreamAsync(
         TestStream,
         StreamState.Any,
         new EventData[] { eventData }
       );
 
-      await client.AppendToStreamAsync(
+      await _client.AppendToStreamAsync(
         TestStream,
         StreamState.Any,
         new EventData[] { eventData }
@@ -89,16 +83,14 @@ namespace Tests.Event
     [Fact]
     public async Task Append_Concurrency()
     {
-      var client = GetCnn();
-
-      var clientOneRead = client.ReadStreamAsync(
+      var clientOneRead = _client.ReadStreamAsync(
         Direction.Forwards,
         TestNoStream,
         StreamPosition.Start,
         configureOperationOptions: options => options.ThrowOnAppendFailure = false);
       var clientOneRevision = (await clientOneRead.LastAsync()).Event.EventNumber.ToUInt64();
 
-      var clientTwoRead = client.ReadStreamAsync(Direction.Forwards, "some-nostream", StreamPosition.Start);
+      var clientTwoRead = _client.ReadStreamAsync(Direction.Forwards, "some-nostream", StreamPosition.Start);
       var clientTwoRevision = (await clientTwoRead.LastAsync()).Event.EventNumber.ToUInt64();
 
       var clientOneData = new EventData(
@@ -107,7 +99,7 @@ namespace Tests.Event
         Encoding.UTF8.GetBytes("{\"id\": \"1\" \"value\": \"clientOne\"}")
       );
 
-      await client.AppendToStreamAsync(
+      await _client.AppendToStreamAsync(
         TestNoStream,
         clientOneRevision,
         new List<EventData> {
@@ -122,7 +114,7 @@ namespace Tests.Event
 
       try
       {
-        await client.AppendToStreamAsync(
+        await _client.AppendToStreamAsync(
           TestNoStream,
           clientTwoRevision,
           new List<EventData> {

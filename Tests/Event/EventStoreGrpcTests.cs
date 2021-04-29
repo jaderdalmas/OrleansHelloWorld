@@ -1,16 +1,17 @@
 ﻿using EventStore.Client;
+using Xunit;
 
 namespace Tests.Event
 {
+  [Collection(nameof(EventStoreCollection))]
   public partial class EventStoreGrpcTests
   {
-    private EventStoreClient GetCnn()
+    private readonly EventStoreClient _client;
+    public EventStoreGrpcTests(EventStoreFixture fixture)
     {
-      var settings = EventStoreClientSettings
-        .Create("esdb://localhost:2113?tls=false");
-      return new EventStoreClient(settings);
+      _client = fixture.Client;
     }
-
+    
     private string EventType => "TestEvent";
     private string TestStream => "test-stream";
     private string TestNoStream => "test-nostream";

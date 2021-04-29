@@ -19,17 +19,13 @@ namespace Tests.Event
     [Fact]
     public async Task SubscribeStream()
     {
-      var client = GetCnn();
-
-      await client.SubscribeToStreamAsync(TestStream, SubscribeReturn);
+      await _client.SubscribeToStreamAsync(TestStream, SubscribeReturn);
     }
 
     [Fact]
     public async Task SubscribeAll()
     {
-      var client = GetCnn();
-
-      await client.SubscribeToAllAsync(SubscribeReturn);
+      await _client.SubscribeToAllAsync(SubscribeReturn);
     }
 
     private Task SubscribeFilterReturn(StreamSubscription ss, Position p, CancellationToken ct)
@@ -41,51 +37,41 @@ namespace Tests.Event
     [Fact]
     public async Task SubscribeAll_StreamFilterPrefix()
     {
-      var client = GetCnn();
-
       var prefixStreamFilter = new SubscriptionFilterOptions(StreamFilter.Prefix("test-", "other-"));
-      await client.SubscribeToAllAsync(SubscribeReturn,
+      await _client.SubscribeToAllAsync(SubscribeReturn,
         filterOptions: prefixStreamFilter);
     }
 
     [Fact]
     public async Task SubscribeAll_StreamFilterExpression()
     {
-      var client = GetCnn();
-
       var prefixStreamFilter = new SubscriptionFilterOptions(StreamFilter.RegularExpression("^test|^other"));
-      await client.SubscribeToAllAsync(SubscribeReturn,
+      await _client.SubscribeToAllAsync(SubscribeReturn,
         filterOptions: prefixStreamFilter);
     }
 
     [Fact]
     public async Task SubscribeAll_EventFilterSystem()
     {
-      var client = GetCnn();
-
       var typeEventFilter = new SubscriptionFilterOptions(EventTypeFilter.ExcludeSystemEvents(),
         checkpointInterval: 5, checkpointReached: SubscribeFilterReturn);
-      await client.SubscribeToAllAsync(SubscribeReturn,
+      await _client.SubscribeToAllAsync(SubscribeReturn,
         filterOptions: typeEventFilter);
     }
 
     [Fact]
     public async Task SubscribeAll_EventFilterPrefix()
     {
-      var client = GetCnn();
-
       var prefixEventFilter = new SubscriptionFilterOptions(EventTypeFilter.Prefix("test-"));
-      await client.SubscribeToAllAsync(SubscribeReturn,
+      await _client.SubscribeToAllAsync(SubscribeReturn,
         filterOptions: prefixEventFilter);
     }
 
     [Fact]
     public async Task SubscribeAll_EventFilterExpression()
     {
-      var client = GetCnn();
-
       var prefixEventFilter = new SubscriptionFilterOptions(EventTypeFilter.RegularExpression("^test"));
-      await client.SubscribeToAllAsync(SubscribeReturn,
+      await _client.SubscribeToAllAsync(SubscribeReturn,
         filterOptions: prefixEventFilter);
     }
   }
