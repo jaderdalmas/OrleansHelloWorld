@@ -20,7 +20,6 @@ namespace EventStore
 
       Client = new EventStoreClient(settings);
     }
-
   }
 
   public static class EventStoreServiceExtensions
@@ -28,6 +27,7 @@ namespace EventStore
     public static IServiceCollection AddEventStoreService(this IServiceCollection services)
     {
       services.AddSingleton<IEventStoreService, EventStoreService>();
+      services.AddSingleton(_ => _.GetService<IEventStoreService>().Client);
       return services;
     }
   }
