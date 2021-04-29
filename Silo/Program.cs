@@ -1,4 +1,5 @@
-﻿using Grains;
+﻿using EventStore;
+using Grains;
 using Grains.Storage;
 using Interfaces;
 using Microsoft.AspNetCore.Hosting;
@@ -55,6 +56,9 @@ namespace Silo
         })
         .ConfigureServices(services =>
         {
+          services.Configure<EventStoreSettings>(settings => settings.Connection = "esdb://localhost:2113?tls=false");
+          services.AddEventStoreService();
+
           services.Configure<ConsoleLifetimeOptions>(options =>
           {
             options.SuppressStatusMessages = true;
