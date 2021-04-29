@@ -11,16 +11,15 @@ using System.Threading.Tasks;
 
 namespace API.Services
 {
-  public class ClientService : IHostedService
+  public class OrleansService : IHostedService
   {
-    private readonly ILogger<ClientService> _logger;
+    private readonly ILogger<OrleansService> _logger;
 
-    public ClientService(ILogger<ClientService> logger, ILoggerProvider loggerProvider)
+    public OrleansService(ILogger<OrleansService> logger, ILoggerProvider loggerProvider)
     {
       _logger = logger;
       Client = new ClientBuilder()
         .UseLocalhostClustering()
-        //.Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
         .AddSimpleMessageStreamProvider(InterfaceConst.SMSProvider)
         .ConfigureLogging(builder => builder.AddProvider(loggerProvider))
         .Build();
@@ -73,13 +72,13 @@ namespace API.Services
     public IClusterClient Client { get; }
   }
 
-  public static class ClientServiceExtensions
+  public static class OrleansServiceExtensions
   {
-    public static IServiceCollection AddClientService(this IServiceCollection services)
+    public static IServiceCollection AddOrleansService(this IServiceCollection services)
     {
-      services.AddSingleton<ClientService>();
-      services.AddSingleton<IHostedService>(_ => _.GetService<ClientService>());
-      services.AddSingleton(_ => _.GetService<ClientService>().Client);
+      services.AddSingleton<OrleansService>();
+      services.AddSingleton<IHostedService>(_ => _.GetService<OrleansService>());
+      services.AddSingleton(_ => _.GetService<OrleansService>().Client);
       return services;
     }
   }
