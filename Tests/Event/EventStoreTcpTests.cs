@@ -1,6 +1,7 @@
 ﻿using EventStore.ClientAPI;
 using EventStore.ClientAPI.SystemData;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -15,6 +16,7 @@ namespace Tests.Event
         new Uri("tcp://admin:changeit@localhost:1113"));
     }
 
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Knowledge Maintainance")]
     private IEventStoreConnection LiveCnn()
     {
       var settingsBuilder = ConnectionSettings.Create();
