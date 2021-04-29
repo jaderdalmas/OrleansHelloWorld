@@ -11,7 +11,7 @@ namespace Tests.Event
     {
       _client = fixture.Client;
     }
-    
+
     private string EventType => "TestEvent";
     private string TestStream => "test-stream";
     private string TestNoStream => "test-nostream";

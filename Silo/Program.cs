@@ -1,5 +1,6 @@
-﻿using Interfaces;
+﻿using Grains;
 using Grains.Storage;
+using Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,7 +14,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
-using Grains;
 
 namespace Silo
 {
