@@ -1,5 +1,4 @@
-﻿using EventStore;
-using EventStore.Client;
+﻿using EventStore.Client;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
@@ -12,22 +11,44 @@ namespace API.Controllers
   [ApiController, Route("[controller]")]
   public class EventController : ControllerBase
   {
-    private EventStoreClient Client { get; }
+    private readonly EventStoreClient _client;
     private string EventType => "TestType";
     private string TestStream => "test-stream";
 
-    public EventController(IEventStoreService eventStoreService)
+    public EventController(EventStoreClient client)
     {
-      Client = eventStoreService.Client;
+      _client = client;
+    }
+
+    [HttpGet("{stream}")]
+    public async Task<string> GetAll(string stream)
+    {
+      var result = _client.ReadStreamAsync(
+        Direction.Forwards,
+        string.IsNullOrWhiteSpace(stream) ? TestStream : stream,
+        StreamPosition.Start
+      );
+
+      if (await result.ReadState == ReadState.StreamNotFound)
+        return null;
+
+      var sb = new StringBuilder();
+      foreach (var vnt in result.ToEnumerable())
+        sb.AppendLine(Encoding.UTF8.GetString(vnt.Event.Data.Span));
+
+      return sb.ToString();
     }
 
     [HttpGet]
-    public async Task Get()
+    public async Task Post(string message, string stream)
     {
+      if (string.IsNullOrWhiteSpace(message))
+        message = "I wrote my first event!";
+
       var data = new
       {
         EntityId = Guid.NewGuid().ToString("N"),
-        ImportantData = "I wrote my first event!"
+        ImportantData = message
       };
 
       var eventData = new EventData(
@@ -36,23 +57,11 @@ namespace API.Controllers
         JsonSerializer.SerializeToUtf8Bytes(data)
       );
 
-      await Client.AppendToStreamAsync(
-        TestStream,
+      await _client.AppendToStreamAsync(
+        string.IsNullOrWhiteSpace(stream) ? TestStream : stream,
         StreamState.Any,
         new[] { eventData }
       );
-
-      var result = Client.ReadStreamAsync(
-        Direction.Forwards,
-        TestStream,
-        StreamPosition.Start
-      );
-
-      if (await result.ReadState == ReadState.StreamNotFound)
-        return;
-
-      foreach (var vnt in result.ToEnumerable())
-        Console.WriteLine(Encoding.UTF8.GetString(vnt.Event.Data.Span));
     }
   }
 }
