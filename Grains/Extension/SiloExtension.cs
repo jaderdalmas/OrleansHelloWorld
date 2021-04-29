@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace Grains
 {
-  public static class BuilderExtension
+  public static class SiloExtension
   {
     public static ISiloBuilder Configure_Grains(this ISiloBuilder builder)
     {
