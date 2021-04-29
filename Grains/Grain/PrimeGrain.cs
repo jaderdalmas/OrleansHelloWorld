@@ -1,4 +1,5 @@
-﻿using Interfaces;
+﻿using EventStore.Client;
+using Interfaces;
 using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -7,6 +8,8 @@ using Orleans.Streams.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Grains
@@ -16,12 +19,13 @@ namespace Grains
   public class PrimeGrain : Grain<PrimeState>, IPrime
   {
     private readonly ILogger _logger;
-    private readonly Observer<int> observer;
+    private readonly EventStoreClient _client;
 
-    public PrimeGrain(ILogger<PrimeGrain> logger)
+    public PrimeGrain(ILogger<PrimeGrain> logger, EventStoreClient client)
     {
       _logger = logger;
 
+      _client = client;
       observer = new Observer<int>(logger, (int number) => IsPrime(number));
     }
 
@@ -31,11 +35,17 @@ namespace Grains
 
       // initialize the value
       _value = VersionedValue<int>.None.NextVersion(0);
-
       // initialize the polling wait handle
       _wait = new TaskCompletionSource<VersionedValue<int>>();
 
+      _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn).Wait();
+
       return base.OnActivateAsync();
+    }
+    private Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
+    {
+      var result = Encoding.UTF8.GetString(vnt.Event.Data.Span);
+      return IsPrime(int.Parse(result));
     }
 
     public Task Consume()
@@ -44,6 +54,7 @@ namespace Grains
       return Task.CompletedTask;
     }
 
+    private readonly Observer<int> observer;
     public async Task OnSubscribed(IStreamSubscriptionHandleFactory handleFactory)
     {
       var handle = handleFactory.Create<int>();

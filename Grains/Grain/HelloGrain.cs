@@ -15,6 +15,7 @@ namespace Grains
   public class HelloGrain : Grain, IHello
   {
     private readonly ILogger _logger;
+    private readonly EventStoreClient _client;
 
     public HelloGrain(ILogger<IHello> logger, EventStoreClient client)
     {
@@ -26,19 +27,29 @@ namespace Grains
       _counter = 0;
     }
 
-    private readonly EventStoreClient _client;
-    private readonly Observer<string> observer;
-    public async Task OnSubscribed(IStreamSubscriptionHandleFactory handleFactory)
+    public override Task OnActivateAsync()
     {
       _client.SubscribeToStreamAsync(InterfaceConst.PSHello, SubscribeReturn).Wait();
 
-      var handle = handleFactory.Create<string>();
-      await handle.ResumeAsync(observer);
+      return base.OnActivateAsync();
     }
     private Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
       var result = Encoding.UTF8.GetString(vnt.Event.Data.Span);
       return SayHello(result);
+    }
+
+    public Task Consume()
+    {
+      _logger.LogInformation("Starting to consume...");
+      return Task.CompletedTask;
+    }
+
+    private readonly Observer<string> observer;
+    public async Task OnSubscribed(IStreamSubscriptionHandleFactory handleFactory)
+    {
+      var handle = handleFactory.Create<string>();
+      await handle.ResumeAsync(observer);
     }
 
     private int _counter;
