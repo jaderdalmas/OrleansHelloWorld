@@ -10,7 +10,7 @@ namespace Tests
     {
       var builder = new TestClusterBuilder();
 
-      builder.AddSiloBuilderConfigurator<TestSiloConfigurations>();
+      builder.AddSiloBuilderConfigurator<ClusterSiloConfigurations>();
 
       Cluster = builder.Build();
     }

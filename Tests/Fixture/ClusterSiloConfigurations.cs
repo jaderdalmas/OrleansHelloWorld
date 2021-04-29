@@ -4,7 +4,7 @@ using Orleans.TestingHost;
 
 namespace Tests
 {
-  public class TestSiloConfigurations : ISiloConfigurator
+  public class ClusterSiloConfigurations : ISiloConfigurator
   {
     public void Configure(ISiloBuilder hostBuilder)
     {
