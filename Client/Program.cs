@@ -22,12 +22,11 @@ namespace Client
       return Host.CreateDefaultBuilder(args)
         .ConfigureServices(services =>
         {
-          services.AddSingleton<ClusterClientHostedService>();
-          services.AddSingleton<IHostedService>(_ => _.GetService<ClusterClientHostedService>());
-          services.AddSingleton(_ => _.GetService<ClusterClientHostedService>().Client);
+          services.AddOrleansClusterClient();
+          services.AddEventStoreClient();
 
           services.AddHostedService<HelloWorldClientHostedService>();
-          services.AddHostedService<PrimeClientHostedService>();
+          //services.AddHostedService<PrimeClientHostedService>();
 
           services.Configure<ConsoleLifetimeOptions>(options =>
           {

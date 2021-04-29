@@ -1,4 +1,5 @@
 using Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -10,11 +11,11 @@ using System.Threading.Tasks;
 
 namespace Client
 {
-  public class ClusterClientHostedService : IHostedService
+  public class OrleansService : IHostedService
   {
-    private readonly ILogger<ClusterClientHostedService> _logger;
+    private readonly ILogger<OrleansService> _logger;
 
-    public ClusterClientHostedService(ILogger<ClusterClientHostedService> logger, ILoggerProvider loggerProvider)
+    public OrleansService(ILogger<OrleansService> logger, ILoggerProvider loggerProvider)
     {
       _logger = logger;
       Client = new ClientBuilder()
@@ -29,38 +30,30 @@ namespace Client
       var attempt = 0;
       var maxAttempts = 100;
       var delay = TimeSpan.FromSeconds(1);
+      var message = "Failed to connect to Orleans cluster on attempt {@Attempt} of {@MaxAttempts}.";
       return Client.Connect(async error =>
       {
         if (cancellationToken.IsCancellationRequested)
+          return false;
+
+        if (attempt++ > maxAttempts)
+        {
+          _logger.LogError(error, message, attempt, maxAttempts);
+
+          return false;
+        }
+
+        _logger.LogWarning(error, message, attempt, maxAttempts);
+        try
+        {
+          await Task.Delay(delay, cancellationToken);
+        }
+        catch (OperationCanceledException)
         {
           return false;
         }
 
-        if (++attempt < maxAttempts)
-        {
-          _logger.LogWarning(error,
-            "Failed to connect to Orleans cluster on attempt {@Attempt} of {@MaxAttempts}.",
-            attempt, maxAttempts);
-
-          try
-          {
-            await Task.Delay(delay, cancellationToken);
-          }
-          catch (OperationCanceledException)
-          {
-            return false;
-          }
-
-          return true;
-        }
-        else
-        {
-          _logger.LogError(error,
-            "Failed to connect to Orleans cluster on attempt {@Attempt} of {@MaxAttempts}.",
-            attempt, maxAttempts);
-
-          return false;
-        }
+        return true;
       });
     }
 
@@ -77,5 +70,16 @@ namespace Client
     }
 
     public IClusterClient Client { get; }
+  }
+
+  public static class OrleansServiceExtensions
+  {
+    public static IServiceCollection AddOrleansClusterClient(this IServiceCollection services)
+    {
+      services.AddSingleton<OrleansService>();
+      services.AddSingleton<IHostedService>(_ => _.GetService<OrleansService>());
+      services.AddSingleton(_ => _.GetService<OrleansService>().Client);
+      return services;
+    }
   }
 }

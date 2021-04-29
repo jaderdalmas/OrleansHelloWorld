@@ -1,3 +1,4 @@
+using EventStore.Client;
 using Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -5,7 +6,9 @@ using Orleans;
 using Orleans.Runtime;
 using Orleans.Streams;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,30 +17,33 @@ namespace Client
   public class HelloWorldClientHostedService : IHostedService
   {
     private readonly ILogger _logger;
-    private readonly IClusterClient _client;
+    private readonly IClusterClient _orleans;
+    private readonly EventStoreClient _eventStore;
 
-    public HelloWorldClientHostedService(ILogger<HelloWorldClientHostedService> logger, IClusterClient client)
+    public HelloWorldClientHostedService(ILogger<HelloWorldClientHostedService> logger, IClusterClient orleans, EventStoreClient eventStore)
     {
       _logger = logger;
-      _client = client;
+      _orleans = orleans;
+      _eventStore = eventStore;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
       //await Simple();
-      await Stream();
+      //await Stream();
+      await EventStore();
     }
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Old Version")]
     private async Task Simple()
     {
       // IHello
-      var friend = _client.GetGrain<IHello>(0);
+      var friend = _orleans.GetGrain<IHello>(0);
       var response = await friend.SayHello($"Good morning!");
       Console.WriteLine($"\n\n{response}\n\n");
 
       //IHelloArchive
-      var g = _client.GetGrain<IHelloArchive>(0);
+      var g = _orleans.GetGrain<IHelloArchive>(0);
       response = await g.SayHello("Good day!");
       Console.WriteLine($"{response}");
 
@@ -50,18 +56,38 @@ namespace Client
 
     public async Task Stream()
     {
-      var grain = _client.GetGrain<IHello>(0);
+      var grain = _orleans.GetGrain<IHello>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      var response = await grain.SayHello("Testing");
-      Console.WriteLine($"{response}");
-
-      var stream = _client.GetStreamProvider(InterfaceConst.SMSProvider)
+      var stream = _orleans.GetStreamProvider(InterfaceConst.SMSProvider)
         .GetStream<string>(key, InterfaceConst.PSHello);
       //await stream.SubscribeAsync(OnNextAsync);
 
       for (int i = 1; i < 10; i++)
         await stream.OnNextAsync($"Good morning, {i}!");
+    }
+
+    public async Task EventStore()
+    {
+      await _eventStore.SoftDeleteAsync(InterfaceConst.PSHello, StreamState.Any);
+
+      var events = new List<EventData>();
+      for (int i = 1; i < 10; i++)
+      {
+        var evt = $"Good morning, {i}!";
+
+        events.Add(new EventData(
+          Uuid.NewUuid(),
+          evt.GetType().ToString(),
+          JsonSerializer.SerializeToUtf8Bytes(evt)
+        ));
+      }
+
+      await _eventStore.AppendToStreamAsync(
+        InterfaceConst.PSHello,
+        StreamState.Any,
+        events
+      );
     }
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Testing")]
