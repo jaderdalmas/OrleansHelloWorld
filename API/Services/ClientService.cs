@@ -1,4 +1,4 @@
-using GrainInterfaces;
+using Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -21,7 +21,7 @@ namespace API.Services
       Client = new ClientBuilder()
         .UseLocalhostClustering()
         //.Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
-        .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
+        .AddSimpleMessageStreamProvider(InterfaceConst.SMSProvider)
         .ConfigureLogging(builder => builder.AddProvider(loggerProvider))
         .Build();
     }

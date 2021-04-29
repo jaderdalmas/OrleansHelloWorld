@@ -1,4 +1,4 @@
-using GrainInterfaces;
+using Interfaces;
 using Orleans.TestingHost;
 using System.Threading.Tasks;
 using Xunit;

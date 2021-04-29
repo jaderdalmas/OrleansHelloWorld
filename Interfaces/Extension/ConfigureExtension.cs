@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace GrainInterfaces
+namespace Interfaces
 {
   public static class BuilderExtension
   {
@@ -13,8 +13,8 @@ namespace GrainInterfaces
     {
       return builder.Configure<ClusterOptions>(options =>
       {
-        options.ClusterId = AppConst.ClusterId;
-        options.ServiceId = AppConst.ServiceId;
+        options.ClusterId = InterfaceConst.ClusterId;
+        options.ServiceId = InterfaceConst.ServiceId;
       });
     }
 
@@ -22,8 +22,8 @@ namespace GrainInterfaces
     {
       return builder.Configure<ClusterOptions>(options =>
       {
-        options.ClusterId = AppConst.ClusterId;
-        options.ServiceId = AppConst.ServiceId;
+        options.ClusterId = InterfaceConst.ClusterId;
+        options.ServiceId = InterfaceConst.ServiceId;
       });
     }
 
@@ -32,8 +32,8 @@ namespace GrainInterfaces
     {
       return builder.Configure<ClusterOptions>(options =>
       {
-        options.ClusterId = AppConst.ClusterId;
-        options.ServiceId = AppConst.ServiceId;
+        options.ClusterId = InterfaceConst.ClusterId;
+        options.ServiceId = InterfaceConst.ServiceId;
       });
     }
 

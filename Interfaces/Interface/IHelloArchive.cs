@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace GrainInterfaces
+namespace Interfaces
 {
   public interface IHelloArchive : IGrainWithIntegerKey
   {

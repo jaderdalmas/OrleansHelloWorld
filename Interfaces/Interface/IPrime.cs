@@ -2,7 +2,7 @@
 using Orleans.Streams.Core;
 using System.Threading.Tasks;
 
-namespace GrainInterfaces
+namespace Interfaces
 {
   public interface IPrime : IGrainWithIntegerKey, IStreamSubscriptionObserver, IReactiveCacheFrom<int>, IConsumer
   {

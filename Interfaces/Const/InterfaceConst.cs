@@ -1,6 +1,6 @@
-﻿namespace GrainInterfaces
+﻿namespace Interfaces
 {
-  public static class AppConst
+  public static class InterfaceConst
   {
     public const string ClusterId = "dev";
 

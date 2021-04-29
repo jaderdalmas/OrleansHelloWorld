@@ -2,7 +2,7 @@
 
 namespace Grains
 {
-  public static class AppConst
+  public static class GrainConst
   {
     public static Assembly Assembly => typeof(HelloGrain).Assembly;
 

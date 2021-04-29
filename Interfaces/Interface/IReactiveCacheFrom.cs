@@ -1,7 +1,7 @@
-﻿using GrainInterfaces.Model;
+﻿using Interfaces.Model;
 using System.Threading.Tasks;
 
-namespace GrainInterfaces
+namespace Interfaces
 {
   public interface IReactiveCacheFrom<T>
   {

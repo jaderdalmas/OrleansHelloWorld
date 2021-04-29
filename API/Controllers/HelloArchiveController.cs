@@ -1,4 +1,4 @@
-﻿using GrainInterfaces;
+﻿using Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Orleans;
 using System.Collections.Generic;

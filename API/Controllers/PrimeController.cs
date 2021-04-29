@@ -1,4 +1,4 @@
-﻿using GrainInterfaces;
+﻿using Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Orleans;
 using System.Collections.Generic;
@@ -28,8 +28,8 @@ namespace API.Controllers
       var grain = _client.GetGrain<IPrime>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      var stream = _client.GetStreamProvider(AppConst.SMSProvider)
-        .GetStream<int>(key, AppConst.PSPrime);
+      var stream = _client.GetStreamProvider(InterfaceConst.SMSProvider)
+        .GetStream<int>(key, InterfaceConst.PSPrime);
 
       for (int mil = 0; mil < 1; mil++)
       {

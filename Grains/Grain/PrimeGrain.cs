@@ -1,5 +1,5 @@
-﻿using GrainInterfaces;
-using GrainInterfaces.Model;
+﻿using Interfaces;
+using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 
 namespace Grains
 {
-  [ImplicitStreamSubscription(GrainInterfaces.AppConst.PSPrime)]
-  [StorageProvider(ProviderName = AppConst.Storage)]
+  [ImplicitStreamSubscription(Interfaces.InterfaceConst.PSPrime)]
+  [StorageProvider(ProviderName = GrainConst.Storage)]
   public class PrimeGrain : Grain<PrimeState>, IPrime
   {
     private readonly ILogger _logger;

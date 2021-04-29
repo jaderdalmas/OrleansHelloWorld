@@ -1,4 +1,4 @@
-using GrainInterfaces;
+using Interfaces;
 using Orleans;
 using Orleans.Runtime;
 using System;
@@ -11,7 +11,7 @@ namespace Grains
   {
     private readonly IPersistentState<GreetingArchive> _archive;
 
-    public HelloArchiveGrain([PersistentState("archive", AppConst.Storage)] IPersistentState<GreetingArchive> archive)
+    public HelloArchiveGrain([PersistentState("archive", GrainConst.Storage)] IPersistentState<GreetingArchive> archive)
     {
       _archive = archive;
 

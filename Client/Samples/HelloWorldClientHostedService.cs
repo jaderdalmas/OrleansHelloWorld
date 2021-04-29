@@ -1,4 +1,4 @@
-using GrainInterfaces;
+using Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -56,8 +56,8 @@ namespace Client
       var response = await grain.SayHello("Testing");
       Console.WriteLine($"{response}");
 
-      var stream = _client.GetStreamProvider(AppConst.SMSProvider)
-        .GetStream<string>(key, AppConst.PSHello);
+      var stream = _client.GetStreamProvider(InterfaceConst.SMSProvider)
+        .GetStream<string>(key, InterfaceConst.PSHello);
       //await stream.SubscribeAsync(OnNextAsync);
 
       for (int i = 1; i < 10; i++)

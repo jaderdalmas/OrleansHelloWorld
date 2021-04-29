@@ -1,4 +1,4 @@
-﻿using GrainInterfaces;
+﻿using Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans.Hosting;
 using System;

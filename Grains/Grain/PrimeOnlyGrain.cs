@@ -1,5 +1,5 @@
-﻿using GrainInterfaces;
-using GrainInterfaces.Model;
+﻿using Interfaces;
+using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using System;

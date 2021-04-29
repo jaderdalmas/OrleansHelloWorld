@@ -1,7 +1,7 @@
 ﻿using Orleans.Concurrency;
 using System;
 
-namespace GrainInterfaces.Model
+namespace Interfaces.Model
 {
   /// <summary>
   /// This class illustrates a version token with a concept of "no version".

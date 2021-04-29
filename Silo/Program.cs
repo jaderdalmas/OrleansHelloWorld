@@ -1,4 +1,4 @@
-﻿using GrainInterfaces;
+﻿using Interfaces;
 using Grains.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +13,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
+using Grains;
 
 namespace Silo
 {
@@ -32,13 +33,13 @@ namespace Silo
           .UseLocalhostClustering()
           .Configure_ClusterOptions()
           .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-          .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
-          .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
+          .Configure_Grains(new List<Assembly>() { GrainConst.Assembly })
+          .AddFileGrainStorage(GrainConst.Storage, opts =>
           {
             opts.RootDirectory = "./TestFiles";
           })
-          .AddSimpleMessageStreamProvider(AppConst.SMSProvider)
-          .AddMemoryGrainStorage(Grains.AppConst.PSStore)
+          .AddSimpleMessageStreamProvider(InterfaceConst.SMSProvider)
+          .AddMemoryGrainStorage(GrainConst.PSStore)
           .UseDashboard(options =>
           {
             options.HideTrace = true;
@@ -91,9 +92,9 @@ namespace Silo
         .UseLocalhostClustering()
         .Configure_ClusterOptions()
         .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-        .Configure_Grains(new List<Assembly>() { Grains.AppConst.Assembly })
+        .Configure_Grains(new List<Assembly>() { GrainConst.Assembly })
         .ConfigureLogging(logging => logging.AddConsole())
-        .AddFileGrainStorage(Grains.AppConst.Storage, opts =>
+        .AddFileGrainStorage(GrainConst.Storage, opts =>
         {
           opts.RootDirectory = "./TestFiles";
         });

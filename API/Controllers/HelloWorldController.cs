@@ -1,4 +1,4 @@
-﻿using GrainInterfaces;
+﻿using Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Orleans;
 using System.Threading.Tasks;
@@ -28,8 +28,8 @@ namespace API.Controllers
       var grain = _client.GetGrain<IHello>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      var stream = _client.GetStreamProvider(AppConst.SMSProvider)
-        .GetStream<string>(key, AppConst.PSHello);
+      var stream = _client.GetStreamProvider(InterfaceConst.SMSProvider)
+        .GetStream<string>(key, InterfaceConst.PSHello);
 
       for (int i = 1; i < 10; i++)
         await stream.OnNextAsync($"Good morning, {i}!");

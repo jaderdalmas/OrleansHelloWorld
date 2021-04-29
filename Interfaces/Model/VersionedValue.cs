@@ -1,6 +1,6 @@
 ﻿using Orleans.Concurrency;
 
-namespace GrainInterfaces.Model
+namespace Interfaces.Model
 {
   [Immutable]
   public struct VersionedValue<T>

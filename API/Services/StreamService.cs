@@ -1,4 +1,4 @@
-﻿using GrainInterfaces;
+﻿using Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -25,8 +25,8 @@ namespace API.Services
       var grain = _client.GetGrain<IPrime>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      var stream = _client.GetStreamProvider(AppConst.SMSProvider)
-        .GetStream<int>(key, AppConst.PSPrime);
+      var stream = _client.GetStreamProvider(InterfaceConst.SMSProvider)
+        .GetStream<int>(key, InterfaceConst.PSPrime);
       await stream.SubscribeAsync(OnNextAsync);
 
       var tasks = new List<Task>();

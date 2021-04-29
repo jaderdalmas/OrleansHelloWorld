@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace GrainInterfaces
+namespace Interfaces
 {
   public interface IConsumer
   {

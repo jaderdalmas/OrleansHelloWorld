@@ -1,4 +1,4 @@
-﻿using GrainInterfaces;
+﻿using Interfaces;
 using Orleans;
 using System;
 using System.Collections.Generic;

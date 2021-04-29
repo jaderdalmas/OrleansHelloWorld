@@ -1,4 +1,4 @@
-﻿using GrainInterfaces;
+﻿using Interfaces;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Streams;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Grains
 {
-  [ImplicitStreamSubscription(GrainInterfaces.AppConst.PSHello)]
+  [ImplicitStreamSubscription(Interfaces.InterfaceConst.PSHello)]
   public class HelloGrain : Grain, IHello
   {
     private readonly ILogger _logger;
