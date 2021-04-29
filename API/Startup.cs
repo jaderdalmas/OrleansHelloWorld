@@ -1,4 +1,5 @@
 using API.Services;
+using EventStore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +22,9 @@ namespace API
     {
       services.AddClientService();
       services.AddHostedService<StreamService>();
+
+      services.Configure<EventStoreSettings>(Configuration.GetSection("EventStore"));
+      services.AddEventStoreService();
 
       services.AddControllers();
       services.AddSwaggerGen(c =>

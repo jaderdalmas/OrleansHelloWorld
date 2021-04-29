@@ -5,9 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EventStore.Client" Version="21.2.0" />
-    <PackageReference Include="EventStore.Client.Grpc.Streams" Version="21.2.0" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.37.0" />
     <PackageReference Include="Microsoft.Orleans.Core" Version="3.4.2" />
     <PackageReference Include="Microsoft.Orleans.OrleansRuntime" Version="3.4.2" />
     <PackageReference Include="OrleansDashboard" Version="3.1.0" />
@@ -15,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EventStore\EventStore.csproj" />
     <ProjectReference Include="..\Grains\Grains.csproj" />
     <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
   </ItemGroup>
