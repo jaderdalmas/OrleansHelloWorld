@@ -1,3 +1,4 @@
+using EventStore;
 using EventStore.Client;
 using Interfaces;
 using Microsoft.Extensions.Hosting;
@@ -73,22 +74,34 @@ namespace Client
 
     private async Task EventStore()
     {
-      await _eventStore.SoftDeleteAsync(InterfaceConst.PSPrime, StreamState.Any);
-
-      var events = new List<EventData>();
-      for (int i = 101; i < 110; i++)
+      for (uint mil = 0; mil < 1; mil++)
       {
-        events.Add(new EventData(
-          Uuid.NewUuid(),
-          i.GetType().ToString(),
-          JsonSerializer.SerializeToUtf8Bytes(i)
-        ));
-      }
+        for (uint dez = (uint)(mil == 0 ? 100 : 0); dez < 1000; dez += 10)
+        {
+          var item = mil * 1000 + dez;
 
-      await _eventStore.AppendToStreamAsync(
-        InterfaceConst.PSPrime,
-        StreamState.Any,
-        events
+          var events = new List<EventData>
+          {
+            GetEvent(item + 1),
+            GetEvent(item + 3),
+            GetEvent(item + 7),
+            GetEvent(item + 9)
+          };
+
+          await _eventStore.AppendToStreamAsync(
+            InterfaceConst.PSPrime,
+            StreamState.Any,
+            events
+          );
+        }
+      }
+    }
+    private EventData GetEvent(uint number)
+    {
+      return new EventData(
+        number.ToUuid(),
+        number.GetType().ToString(),
+        JsonSerializer.SerializeToUtf8Bytes(number)
       );
     }
 
