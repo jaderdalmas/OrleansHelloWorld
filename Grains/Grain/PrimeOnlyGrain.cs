@@ -35,7 +35,7 @@ namespace Grains
             _logger.LogWarning("The reactive poll timed out by returning a 'none' response before Orleans could break the promise.");
             return Task.CompletedTask;
           });
-      _pool = RegisterTimer(_ => func, null, TimeSpan.Zero, TimeSpan.FromTicks(1));
+      _pool = RegisterTimer(_ => func, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
 
       await base.OnActivateAsync();
     }
