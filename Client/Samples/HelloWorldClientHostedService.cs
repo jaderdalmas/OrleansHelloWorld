@@ -1,3 +1,4 @@
+using EventStore;
 using EventStore.Client;
 using Interfaces;
 using Microsoft.Extensions.Hosting;
@@ -84,7 +85,7 @@ namespace Client
         var evt = $"Good morning, {i}!";
 
         events.Add(new EventData(
-          Uuid.NewUuid(),
+          evt.GetHashCode().ToUuid(),
           evt.GetType().ToString(),
           JsonSerializer.SerializeToUtf8Bytes(evt)
         ));
