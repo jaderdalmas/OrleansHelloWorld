@@ -40,7 +40,7 @@ namespace Grains
       // initialize the polling wait handle
       _wait = new TaskCompletionSource<VersionedValue<int>>();
 
-      await ES_Initialize();
+      _es_pool = RegisterTimer(_ => ES_Initialize(), null, TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(1));
       await base.OnActivateAsync();
     }
 
@@ -57,21 +57,35 @@ namespace Grains
       await handle.ResumeAsync(observer);
     }
 
+    private IDisposable _es_pool;
+    private long _position = 0;
     private async Task ES_Initialize()
     {
       var stream = _client.ReadStreamAsync(
         Direction.Forwards,
         InterfaceConst.PSPrime,
-        StreamPosition.Start
+        StreamPosition.FromInt64(_position),
+        maxCount: 100
       );
+      _position += 100;
 
       if (await stream.ReadState == ReadState.StreamNotFound)
+      {
+        await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
+        _es_pool.Dispose();
         return;
+      }
 
+      var tasks = new List<Task>();
       foreach (var vnt in stream.ToEnumerable().AsParallel())
-        await IsPrime(int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span)));
+        tasks.Add(IsPrime(int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span))));
+      Task.WaitAll(tasks.ToArray());
 
-      await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
+      if(tasks.Any() == false)
+      {
+        await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
+        _es_pool.Dispose();
+      }
     }
     private async Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
