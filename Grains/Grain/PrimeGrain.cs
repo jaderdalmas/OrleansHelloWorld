@@ -1,4 +1,5 @@
-﻿using EventStore.Client;
+﻿using EventStore;
+using EventStore.Client;
 using Interfaces;
 using Interfaces.Model;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,7 +31,7 @@ namespace Grains
       observer = new Observer<int>(logger, (int number) => IsPrime(number));
     }
 
-    public override Task OnActivateAsync()
+    public async override Task OnActivateAsync()
     {
       State.Initialize(WriteStateAsync);
 
@@ -38,14 +40,8 @@ namespace Grains
       // initialize the polling wait handle
       _wait = new TaskCompletionSource<VersionedValue<int>>();
 
-      _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn).Wait();
-
-      return base.OnActivateAsync();
-    }
-    private Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
-    {
-      var result = Encoding.UTF8.GetString(vnt.Event.Data.Span);
-      return IsPrime(int.Parse(result));
+      await ES_Initialize();
+      await base.OnActivateAsync();
     }
 
     public Task Consume()
@@ -61,13 +57,35 @@ namespace Grains
       await handle.ResumeAsync(observer);
     }
 
-    public Task<bool> IsPrime(int number)
+    private async Task ES_Initialize()
+    {
+      var stream = _client.ReadStreamAsync(
+        Direction.Forwards,
+        InterfaceConst.PSPrime,
+        StreamPosition.Start
+      );
+
+      if (await stream.ReadState == ReadState.StreamNotFound)
+        return;
+
+      foreach (var vnt in stream.ToEnumerable().AsParallel())
+        await IsPrime(int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span)));
+
+      await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
+    }
+    private async Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
+    {
+      var result = int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span));
+      await IsPrime(result);
+    }
+
+    public async Task<bool> IsPrime(int number)
     {
       if (State.HasPrime(number))
       {
         _logger.LogInformation($"{number} is prime and is on the list");
-        UpdateAsync(number);
-        return Task.FromResult(true);
+        await RC_UpdateAsync(number);
+        return true;
       }
 
       var _primesqrt = State.GetPrimes(number);
@@ -75,15 +93,30 @@ namespace Grains
         if (number.IsDivisible(prime))
         {
           _logger.LogInformation($"{number} is not prime, divisible by {prime}");
-          return Task.FromResult(false);
+          return false;
         }
 
       _logger.LogInformation($"{number} is prime and will be added on the list");
 
       State.AddPrime(number, WriteStateAsync);
-      UpdateAsync(number);
+      await RC_UpdateAsync(number);
+      await ES_UpdateAsnc(number);
 
-      return Task.FromResult(true);
+      return true;
+    }
+    private async Task ES_UpdateAsnc(int number)
+    {
+      var vnt = new EventData(
+        number.ToUuid(),
+        number.GetType().ToString(),
+        JsonSerializer.SerializeToUtf8Bytes(number)
+      );
+
+      await _client.AppendToStreamAsync(
+        InterfaceConst.PSPrimeOnly,
+        StreamState.Any,
+        new[] { vnt }
+      );
     }
 
     #region RC
@@ -92,7 +125,7 @@ namespace Grains
 
     public Task<VersionedValue<int>> GetAsync() => Task.FromResult(_value);
 
-    public Task UpdateAsync(int value)
+    public Task RC_UpdateAsync(int value)
     {
       var key = this.GetPrimaryKeyLong();
       // update the state

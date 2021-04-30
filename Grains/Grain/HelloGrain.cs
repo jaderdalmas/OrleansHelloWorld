@@ -27,16 +27,16 @@ namespace Grains
       _counter = 0;
     }
 
-    public override Task OnActivateAsync()
+    public async override Task OnActivateAsync()
     {
-      _client.SubscribeToStreamAsync(InterfaceConst.PSHello, SubscribeReturn).Wait();
+      await _client.SubscribeToStreamAsync(InterfaceConst.PSHello, SubscribeReturn);
 
-      return base.OnActivateAsync();
+      await base.OnActivateAsync();
     }
-    private Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
+    private async Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
       var result = Encoding.UTF8.GetString(vnt.Event.Data.Span);
-      return SayHello(result);
+      await SayHello(result);
     }
 
     public Task Consume()

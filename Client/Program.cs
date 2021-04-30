@@ -26,7 +26,7 @@ namespace Client
           services.AddEventStoreClient();
 
           services.AddHostedService<HelloWorldClientHostedService>();
-          //services.AddHostedService<PrimeClientHostedService>();
+          services.AddHostedService<PrimeClientHostedService>();
 
           services.Configure<ConsoleLifetimeOptions>(options =>
           {
