@@ -11,48 +11,35 @@ namespace Tests.Event
   public partial class EventStoreGrpcTests
   {
     [Fact]
+    public async Task Read_NoStream()
+    {
+      var result = _client.ReadStreamAsync(Direction.Forwards, "hehehe", StreamPosition.Start);
+      Assert.Equal(ReadState.StreamNotFound, await result.ReadState);
+    }
+
+    [Fact]
     public async Task Read_Stream()
     {
-      var data = new
-      {
-        EntityId = Guid.NewGuid().ToString("N"),
-        ImportantData = "I wrote my first event!"
-      };
+      var result = _client.ReadStreamAsync(Direction.Forwards, TestStream, StreamPosition.Start);
+      Assert.NotEqual(ReadState.StreamNotFound, await result.ReadState);
+      Assert.NotEmpty(result.ToEnumerable());
+      Assert.Empty(result.ToEnumerable());
 
-      var eventData = new EventData(
-        Uuid.NewUuid(),
-        EventType,
-        JsonSerializer.SerializeToUtf8Bytes(data)
-      );
+      result = _client.ReadStreamAsync(Direction.Forwards, TestStream, StreamPosition.Start);
+      Assert.True(await result.AnyAsync());
+      Assert.Empty(result.ToEnumerable());
+    }
 
-      await _client.AppendToStreamAsync(
-        TestStream,
-        StreamState.Any,
-        new[] { eventData }
-      );
+    [Fact]
+    public async Task Read_All()
+    {
+      var result = _client.ReadAllAsync(Direction.Forwards, Position.Start, 100);
 
-      var result = _client.ReadStreamAsync(
-        Direction.Forwards,
-        TestStream,
-        StreamPosition.Start
-      );
-
-      if (await result.ReadState == ReadState.StreamNotFound)
+      if (await result.AnyAsync() == false)
         return;
 
       foreach (var vnt in result.ToEnumerable())
         Console.WriteLine(Encoding.UTF8.GetString(vnt.Event.Data.Span));
-    }
-
-    [Fact]
-    public Task Read_All()
-    {
-      var result = _client.ReadAllAsync(Direction.Forwards, Position.Start);
-
-      foreach (var vnt in result.ToEnumerable())
-        Console.WriteLine(Encoding.UTF8.GetString(vnt.Event.Data.Span));
-
-      return Task.CompletedTask;
     }
   }
 }
