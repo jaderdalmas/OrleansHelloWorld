@@ -74,7 +74,7 @@ namespace Client
 
     private async Task EventStore()
     {
-      for (uint mil = 0; mil < 1; mil++)
+      for (uint mil = 0; mil < 100; mil++)
       {
         for (uint dez = (uint)(mil == 0 ? 100 : 0); dez < 1000; dez += 10)
         {
@@ -88,11 +88,12 @@ namespace Client
             GetEvent(item + 9)
           };
 
-          await _eventStore.AppendToStreamAsync(
-            InterfaceConst.PSPrime,
-            StreamState.Any,
-            events
-          );
+          try
+          {
+            await _eventStore.AppendToStreamAsync(
+              InterfaceConst.PSPrime, StreamState.Any, events);
+          }
+          catch { }
         }
       }
     }
