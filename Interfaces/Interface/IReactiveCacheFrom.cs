@@ -16,7 +16,7 @@ namespace Interfaces
     /// <summary>
     /// Update the current state and release Long Poll Wait
     /// </summary>
-    Task UpdateAsync(T value);
+    Task RC_UpdateAsync(T value);
 
     /// <summary>
     /// If the given version is the same as the current version then resolves when a new version of data is available.
