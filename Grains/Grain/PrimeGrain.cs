@@ -31,6 +31,9 @@ namespace Grains
       observer = new Observer<int>(logger, (int number) => IsPrime(number));
     }
 
+    private Orleans.Streams.IAsyncStream<int> Stream => GetStreamProvider(InterfaceConst.SMSProvider)
+        .GetStream<int>(this.GetPrimaryKey(), InterfaceConst.PSPrime);
+
     public async override Task OnActivateAsync()
     {
       State.Initialize(WriteStateAsync);
@@ -61,36 +64,37 @@ namespace Grains
     private long _position = 0;
     private async Task ES_Initialize()
     {
-      var stream = _client.ReadStreamAsync(
+      var ec_stream = _client.ReadStreamAsync(
         Direction.Forwards,
         InterfaceConst.PSPrime,
         StreamPosition.FromInt64(_position),
         maxCount: 100
       );
-      _position += 100;
 
-      if (await stream.ReadState == ReadState.StreamNotFound)
+      if (await ec_stream.ReadState == ReadState.StreamNotFound)
       {
         await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
         _es_pool.Dispose();
         return;
       }
-
+      
       var tasks = new List<Task>();
-      foreach (var vnt in stream.ToEnumerable().AsParallel())
-        tasks.Add(IsPrime(int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span))));
+      foreach (var vnt in ec_stream.ToEnumerable().AsParallel())
+        tasks.Add(SubscribeReturn(null, vnt, CancellationToken.None));
+      await ec_stream.DisposeAsync();
+      _position += tasks.Count;
       Task.WaitAll(tasks.ToArray());
 
       if(tasks.Any() == false)
       {
-        await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
+        await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, StreamPosition.FromInt64(_position), SubscribeReturn);
         _es_pool.Dispose();
       }
     }
     private async Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
       var result = int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span));
-      await IsPrime(result);
+      await Stream.OnNextAsync(result);
     }
 
     public async Task<bool> IsPrime(int number)
