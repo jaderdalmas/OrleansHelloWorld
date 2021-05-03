@@ -1,4 +1,6 @@
-﻿using Orleans.TestingHost;
+﻿using EventStore.Client;
+using Orleans;
+using Orleans.TestingHost;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -8,9 +10,10 @@ namespace Tests
   {
     public ClusterFixture()
     {
-      var builder = new TestClusterBuilder();
+      var builder = new TestClusterBuilder(1);
 
-      builder.AddSiloBuilderConfigurator<ClusterSiloConfigurations>();
+      builder.AddSiloBuilderConfigurator<SiloConfigurations>();
+      builder.AddClientBuilderConfigurator<ClientConfigurations>();
 
       Cluster = builder.Build();
     }
@@ -27,5 +30,7 @@ namespace Tests
     }
 
     public TestCluster Cluster { get; private set; }
+    public IClusterClient Orleans => Cluster.Client;
+    public EventStoreClient EventStore => Cluster.ServiceProvider.GetService(typeof(EventStoreClient)) as EventStoreClient;
   }
 }
