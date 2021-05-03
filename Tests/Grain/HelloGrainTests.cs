@@ -24,30 +24,32 @@ namespace Tests.Grain
     [Fact]
     public async Task SaysHello_Call()
     {
+      // Arrange
       var text = "teste";
-
+      // Act
       var hello = _cluster.GrainFactory.GetGrain<IHello>(0);
       var greeting = await hello.SayHello(text);
-
+      // Assert
       Assert.Equal($"\n Client: '{text}' | Grain: Hello 1 times! | Time: ", greeting.Substring(0, 50));
     }
 
     [Fact]
     public async Task SaysHello_Stream()
     {
+      // Arrange
       var grain = _cluster.Client.GetGrain<IHello>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
       var stream = _cluster.Client.GetStreamProvider(InterfaceConst.SMSProvider)
         .GetStream<string>(key, InterfaceConst.PSHello);
-
-      var text = "teste";
-      await stream.OnNextAsync(text);
+      // Act
+      await stream.OnNextAsync("teste");
     }
 
     [Fact]
     public async Task SaysHello_ES()
     {
+      // Arrange
       var grain = _cluster.Client.GetGrain<IHello>(0);
       await grain.Consume();
 
@@ -59,7 +61,7 @@ namespace Tests.Grain
         evt.GetType().ToString(),
         JsonSerializer.SerializeToUtf8Bytes(evt)
       );
-
+      // Act
       await _eventStore.AppendToStreamAsync(
         InterfaceConst.PSHello,
         StreamState.Any,
