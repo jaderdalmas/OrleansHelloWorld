@@ -31,8 +31,7 @@ namespace Grains
       observer = new Observer<int>(logger, (int number) => IsPrime(number));
     }
 
-    private Orleans.Streams.IAsyncStream<int> Stream => GetStreamProvider(InterfaceConst.SMSProvider)
-        .GetStream<int>(this.GetPrimaryKey(), InterfaceConst.PSPrime);
+    private Orleans.Streams.IAsyncStream<int> Stream => GetStreamProvider(InterfaceConst.SMSProvider).GetStream<int>(this.GetPrimaryKey(), InterfaceConst.PSPrime);
 
     public async override Task OnActivateAsync()
     {

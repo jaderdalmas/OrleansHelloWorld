@@ -27,6 +27,8 @@ namespace Grains
       _counter = 0;
     }
 
+    private Orleans.Streams.IAsyncStream<string> Stream => GetStreamProvider(InterfaceConst.SMSProvider).GetStream<string>(this.GetPrimaryKey(), InterfaceConst.PSHello);
+
     public async override Task OnActivateAsync()
     {
       await _client.SubscribeToStreamAsync(InterfaceConst.PSHello, SubscribeReturn);
@@ -36,7 +38,7 @@ namespace Grains
     private async Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
       var result = Encoding.UTF8.GetString(vnt.Event.Data.Span);
-      await SayHello(result);
+      await Stream.OnNextAsync(result);
     }
 
     public Task Consume()
