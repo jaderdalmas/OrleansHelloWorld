@@ -76,7 +76,7 @@ namespace Grains
         _es_pool.Dispose();
         return;
       }
-      
+
       var tasks = new List<Task>();
       foreach (var vnt in ec_stream.ToEnumerable().AsParallel())
         tasks.Add(SubscribeReturn(null, vnt, CancellationToken.None));
@@ -84,7 +84,7 @@ namespace Grains
       _position += tasks.Count;
       Task.WaitAll(tasks.ToArray());
 
-      if(tasks.Any() == false)
+      if (tasks.Any() == false)
       {
         await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, StreamPosition.FromInt64(_position), SubscribeReturn);
         _es_pool.Dispose();
@@ -115,9 +115,9 @@ namespace Grains
 
       _logger.LogInformation($"{number} is prime and will be added on the list");
 
-      State.AddPrime(number, WriteStateAsync);
-      await RC_UpdateAsync(number);
-      await ES_UpdateAsnc(number);
+      Task.WaitAll(new[] { State.AddPrime(number, WriteStateAsync),
+        RC_UpdateAsync(number),
+        ES_UpdateAsnc(number) });
 
       return true;
     }
@@ -187,7 +187,7 @@ namespace Grains
       if (Act == null)
       {
         Act = act;
-        await Task.Delay(1000);
+        await Task.Delay(TimeSpan.FromSeconds(1));
 
         Primes = Primes.OrderBy(x => x).ToList();
 

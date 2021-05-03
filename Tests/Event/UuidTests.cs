@@ -1,5 +1,4 @@
 ﻿using EventStore;
-using EventStore.Client;
 using System;
 using Xunit;
 

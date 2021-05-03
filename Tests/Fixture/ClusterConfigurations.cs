@@ -15,7 +15,8 @@ namespace Tests
       hostBuilder
         .AddSimpleMessageStreamProvider(InterfaceConst.SMSProvider);
 
-      hostBuilder.ConfigureServices(services => {
+      hostBuilder.ConfigureServices(services =>
+      {
         services.AddEventStoreService();
       });
     }
@@ -30,7 +31,8 @@ namespace Tests
         .AddSimpleMessageStreamProvider(InterfaceConst.SMSProvider)
         .AddMemoryGrainStorage(GrainConst.PSStore);
 
-      hostBuilder.ConfigureServices(services => {
+      hostBuilder.ConfigureServices(services =>
+      {
         services.AddEventStoreService();
       });
     }
