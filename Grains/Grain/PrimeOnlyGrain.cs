@@ -1,8 +1,11 @@
-﻿using Interfaces;
+﻿using EventStore;
+using EventStore.Client;
+using Interfaces;
 using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Grains
@@ -10,10 +13,12 @@ namespace Grains
   public class PrimeOnlyGrain : Grain, IPrimeOnly
   {
     private readonly ILogger _logger;
+    private readonly EventStoreClient _client;
 
-    public PrimeOnlyGrain(ILogger<PrimeOnlyGrain> logger)
+    public PrimeOnlyGrain(ILogger<PrimeOnlyGrain> logger, EventStoreClient eventStore)
     {
       _logger = logger;
+      _client = eventStore;
     }
 
     public override async Task OnActivateAsync()
@@ -27,6 +32,7 @@ namespace Grains
           apply =>
           {
             _cache = apply;
+            ES_UpdateAsync(apply.Value).Wait();
             _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {_cache.Value} with version {_cache.Version}");
             return Task.CompletedTask;
           },
@@ -44,6 +50,25 @@ namespace Grains
     {
       _logger.LogInformation("Starting to consume...");
       return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Add ES prime only number
+    /// </summary>
+    /// <param name="number">number</param>
+    private Task ES_UpdateAsync(int number)
+    {
+      var vnt = new EventData(
+        number.ToUuid(),
+        number.GetType().ToString(),
+        JsonSerializer.SerializeToUtf8Bytes(number)
+      );
+
+      return _client.AppendToStreamAsync(
+        InterfaceConst.PSPrimeOnly,
+        StreamState.Any,
+        new[] { vnt }
+      );
     }
 
     private VersionedValue<int> _cache;
