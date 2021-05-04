@@ -27,9 +27,12 @@ namespace Tests.Grain
     {
       try
       {
-        await _eventStore.SoftDeleteAsync(InterfaceConst.PSPrime, StreamState.StreamExists);
+        await _eventStore.SoftDeleteAsync(InterfaceConst.PSPrime, StreamState.Any);
       }
-      catch { }
+      catch (Exception ex)
+      {
+        Console.WriteLine(ex.Message);
+      }
 
       return;
     }
@@ -89,7 +92,7 @@ namespace Tests.Grain
       await grain.Consume();
 
       var vnt = new EventData(
-        number.GetHashCode().ToUuid(),
+        Uuid.NewUuid(),
         number.GetType().ToString(),
         JsonSerializer.SerializeToUtf8Bytes(number)
       );
@@ -155,7 +158,7 @@ namespace Tests.Grain
       await grain.Consume();
 
       var vnt = new EventData(
-        number.GetHashCode().ToUuid(),
+        Uuid.NewUuid(),
         number.GetType().ToString(),
         JsonSerializer.SerializeToUtf8Bytes(number)
       );
@@ -181,7 +184,7 @@ namespace Tests.Grain
       var events = new List<EventData>();
       for (int i = 101; i < 110; i++)
         events.Add(new EventData(
-          i.GetHashCode().ToUuid(),
+          Uuid.NewUuid(),
           i.GetType().ToString(),
           JsonSerializer.SerializeToUtf8Bytes(i)
         ));
