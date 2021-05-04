@@ -18,7 +18,7 @@ namespace Grains
 {
   [ImplicitStreamSubscription(InterfaceConst.PSPrime)]
   [StorageProvider(ProviderName = GrainConst.Storage)]
-  public class PrimeGrain : Grain<PrimeState>, IPrime
+  public class PrimeGrain : Grain<PrimeState>, IPrime, IAsyncDisposable
   {
     private readonly ILogger _logger;
     private readonly EventStoreClient _client;
@@ -42,7 +42,9 @@ namespace Grains
       // initialize the polling wait handle
       _wait = new TaskCompletionSource<VersionedValue<int>>();
 
-      _es_pool = RegisterTimer(_ => ES_Initialize(), null, TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(1));
+      _es_pool = RegisterTimer(_ => ES_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
+      while (_es_pool != null) await Task.Delay(TimeSpan.FromMilliseconds(500));
+
       await base.OnActivateAsync();
     }
 
@@ -61,7 +63,7 @@ namespace Grains
 
     private IDisposable _es_pool;
     private long _position = 0;
-    private async Task ES_Initialize()
+    public async Task ES_Initialize()
     {
       var ec_stream = _client.ReadStreamAsync(
         Direction.Forwards,
@@ -72,28 +74,27 @@ namespace Grains
 
       if (await ec_stream.ReadState == ReadState.StreamNotFound)
       {
+        _es_pool = _es_pool.Clean();
         await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
-        _es_pool.Dispose();
         return;
       }
 
-      var tasks = new List<Task>();
+      var _init = _position;
       foreach (var vnt in ec_stream.ToEnumerable().AsParallel())
-        tasks.Add(SubscribeReturn(null, vnt, CancellationToken.None));
+        await SubscribeReturn(null, vnt, CancellationToken.None);
       await ec_stream.DisposeAsync();
-      _position += tasks.Count;
-      Task.WaitAll(tasks.ToArray());
 
-      if (tasks.Any() == false)
+      if (_init == _position)
       {
+        _es_pool = _es_pool.Clean();
         await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, StreamPosition.FromInt64(_position), SubscribeReturn);
-        _es_pool.Dispose();
       }
     }
-    private async Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
+    private Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
+      _position++;
       var result = int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span));
-      await Stream.OnNextAsync(result);
+      return Stream.OnNextAsync(result);
     }
 
     public async Task<bool> IsPrime(int number)
@@ -115,13 +116,17 @@ namespace Grains
 
       _logger.LogInformation($"{number} is prime and will be added on the list");
 
-      Task.WaitAll(new[] { State.AddPrime(number, WriteStateAsync),
-        RC_UpdateAsync(number),
-        ES_UpdateAsnc(number) });
+      await State.AddPrime(number);
+
+      State.Primes = State.Primes.OrderBy(x => x).ToList();
+      await WriteStateAsync();
+
+      await RC_UpdateAsync(number);
+      await ES_UpdateAsnc(number);
 
       return true;
     }
-    private async Task ES_UpdateAsnc(int number)
+    private Task ES_UpdateAsnc(int number)
     {
       var vnt = new EventData(
         number.ToUuid(),
@@ -129,7 +134,7 @@ namespace Grains
         JsonSerializer.SerializeToUtf8Bytes(number)
       );
 
-      await _client.AppendToStreamAsync(
+      return _client.AppendToStreamAsync(
         InterfaceConst.PSPrimeOnly,
         StreamState.Any,
         new[] { vnt }
@@ -161,9 +166,20 @@ namespace Grains
             ? _wait.Task.WithDefaultOnTimeout(TimeSpan.Zero, VersionedValue<int>.None)
             : Task.FromResult(_value);
     #endregion
+
+    public async ValueTask DisposeAsync()
+    {
+      await _client.DisposeAsync();
+      
+      _es_pool.Dispose();
+      _es_pool = null;
+
+      _wait.SetCanceled();
+      return;
+    }
   }
 
-  public class PrimeState : IDisposable
+  public class PrimeState
   {
     public void Initialize(Func<Task> act)
     {
@@ -179,27 +195,11 @@ namespace Grains
     public bool HasPrime(int value) => Primes.Contains(value);
     public IEnumerable<int> GetPrimes(int value) => Primes.Where(x => x <= Math.Sqrt(value));
 
-    private Func<Task> Act = null;
-    public async Task AddPrime(int value, Func<Task> act)
+    public Task AddPrime(int value)
     {
       Primes.Add(value);
 
-      if (Act == null)
-      {
-        Act = act;
-        await Task.Delay(TimeSpan.FromSeconds(1));
-
-        Primes = Primes.OrderBy(x => x).ToList();
-
-        await Act.Invoke();
-        Act = null;
-      }
-    }
-
-    public void Dispose()
-    {
-      if (Act != null)
-        Act.Invoke();
+      return Task.CompletedTask;
     }
   }
 }
