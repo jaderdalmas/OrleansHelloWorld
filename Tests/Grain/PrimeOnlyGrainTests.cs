@@ -1,9 +1,7 @@
-using EventStore;
 using EventStore.Client;
 using Interfaces;
-using Orleans;
 using Orleans.TestingHost;
-using System.Text.Json;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -47,6 +45,7 @@ namespace Tests.Grain
       await only.Consume();
       // Act
       await prime.IsPrime(number);
+      await Task.Delay(TimeSpan.FromSeconds(1));
 
       var rprime = await prime.GetAsync();
       var rpnly = await only.GetAsync();

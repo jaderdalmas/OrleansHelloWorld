@@ -1,10 +1,8 @@
-﻿using EventStore;
-using EventStore.Client;
+﻿using EventStore.Client;
 using Interfaces;
 using System;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -78,25 +76,6 @@ namespace Grains
       _position++;
       var result = int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span));
       return IsPrime(result);
-    }
-
-    /// <summary>
-    /// Add ES prime only number
-    /// </summary>
-    /// <param name="number">number</param>
-    private Task ES_UpdateAsync(int number)
-    {
-      var vnt = new EventData(
-        number.ToUuid(),
-        number.GetType().ToString(),
-        JsonSerializer.SerializeToUtf8Bytes(number)
-      );
-
-      return _client.AppendToStreamAsync(
-        InterfaceConst.PSPrimeOnly,
-        StreamState.Any,
-        new[] { vnt }
-      );
     }
 
     /// <summary>

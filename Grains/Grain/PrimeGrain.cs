@@ -80,7 +80,6 @@ namespace Grains
 
       await State_UpdateAsync(number);
       await RC_UpdateAsync(number);
-      await ES_UpdateAsync(number);
 
       return true;
     }

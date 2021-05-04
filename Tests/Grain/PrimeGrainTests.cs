@@ -1,4 +1,3 @@
-using EventStore;
 using EventStore.Client;
 using Interfaces;
 using Orleans;

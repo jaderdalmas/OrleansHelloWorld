@@ -21,35 +21,34 @@ namespace Grains
       _client = eventStore;
     }
 
-    public override async Task OnActivateAsync()
-    {
-      var key = this.GetPrimaryKeyLong();
-      // start long polling
-      var func = this.RegisterRCPoolAsync(
-          () => GrainFactory.GetGrain<IPrime>(key).GetAsync(),
-          () => GrainFactory.GetGrain<IPrime>(key).LongPollAsync(_cache.Version),
-          result => result.IsValid,
-          apply =>
-          {
-            _cache = apply;
-            ES_UpdateAsync(apply.Value).Wait();
-            _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {_cache.Value} with version {_cache.Version}");
-            return Task.CompletedTask;
-          },
-          failed =>
-          {
-            _logger.LogWarning("The reactive poll timed out by returning a 'none' response before Orleans could break the promise.");
-            return Task.CompletedTask;
-          });
-      _pool = RegisterTimer(_ => func, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
-
-      await base.OnActivateAsync();
-    }
-
     public Task Consume()
     {
       _logger.LogInformation("Starting to consume...");
       return Task.CompletedTask;
+    }
+
+    public override async Task OnActivateAsync()
+    {
+      _pool = RegisterTimer(_ => RC_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+
+      await base.OnActivateAsync();
+    }
+
+    private IDisposable _pool;
+    private async Task RC_Initialize()
+    {
+      var key = this.GetPrimaryKeyLong();
+
+      var update = await GrainFactory.GetGrain<IPrime>(key).LongPollAsync(_cache.Version);
+      if (!update.IsValid)
+      {
+        _logger.LogWarning("The reactive poll timed out by returning a 'none' response before Orleans could break the promise.");
+        return;
+      }
+
+      _cache = update;
+      _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {_cache.Value} with version {_cache.Version}");
+      await ES_UpdateAsync(update.Value);
     }
 
     /// <summary>
@@ -72,8 +71,6 @@ namespace Grains
     }
 
     private VersionedValue<int> _cache;
-    private IDisposable _pool;
-
     public Task<int> GetAsync() => Task.FromResult(_cache.Value);
   }
 }
