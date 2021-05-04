@@ -1,102 +1,64 @@
-﻿using EventStore;
-using EventStore.Client;
+﻿using EventStore.Client;
 using Interfaces;
 using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
-using Orleans.Streams.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Grains
 {
-  [ImplicitStreamSubscription(InterfaceConst.PSPrime)]
   [StorageProvider(ProviderName = GrainConst.Storage)]
-  public class PrimeGrain : Grain<PrimeState>, IPrime, IAsyncDisposable
+  public partial class PrimeGrain : Grain<PrimeState>, IPrime, IAsyncDisposable
   {
+    /// <summary>
+    /// Logging Interface
+    /// </summary>
     private readonly ILogger _logger;
-    private readonly EventStoreClient _client;
 
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="logger">grain logger</param>
+    /// <param name="client">event store client</param>
     public PrimeGrain(ILogger<PrimeGrain> logger, EventStoreClient client)
     {
       _logger = logger;
-
-      _client = client;
-      observer = new Observer<int>(logger, (int number) => IsPrime(number));
+      _client = client; // Event Store
+      // Stream
+      observer = new Observer<int>(_logger, (int number) => IsPrime(number));
     }
 
-    private Orleans.Streams.IAsyncStream<int> Stream => GetStreamProvider(InterfaceConst.SMSProvider).GetStream<int>(this.GetPrimaryKey(), InterfaceConst.PSPrime);
-
-    public async override Task OnActivateAsync()
-    {
-      State.Initialize(WriteStateAsync);
-
-      // initialize the value
-      _value = VersionedValue<int>.None.NextVersion(0);
-      // initialize the polling wait handle
-      _wait = new TaskCompletionSource<VersionedValue<int>>();
-
-      _es_pool = RegisterTimer(_ => ES_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
-      while (_es_pool != null) await Task.Delay(TimeSpan.FromMilliseconds(500));
-
-      await base.OnActivateAsync();
-    }
-
+    /// <summary>
+    /// Activate grain
+    /// </summary>
     public Task Consume()
     {
       _logger.LogInformation("Starting to consume...");
       return Task.CompletedTask;
     }
 
-    private readonly Observer<int> observer;
-    public async Task OnSubscribed(IStreamSubscriptionHandleFactory handleFactory)
+    /// <summary>
+    /// Activate grain (state and pooling as ES and RC)
+    /// </summary>
+    public async override Task OnActivateAsync()
     {
-      var handle = handleFactory.Create<int>();
-      await handle.ResumeAsync(observer);
+      State.Initialize(WriteStateAsync);
+
+      await OnActivateRCAsync();
+      await OnActivateESAsync();
+
+      await base.OnActivateAsync();
     }
 
-    private IDisposable _es_pool;
-    private long _position = 0;
-    public async Task ES_Initialize()
-    {
-      var ec_stream = _client.ReadStreamAsync(
-        Direction.Forwards,
-        InterfaceConst.PSPrime,
-        StreamPosition.FromInt64(_position),
-        maxCount: 100
-      );
-
-      if (await ec_stream.ReadState == ReadState.StreamNotFound)
-      {
-        _es_pool = _es_pool.Clean();
-        await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
-        return;
-      }
-
-      var _init = _position;
-      foreach (var vnt in ec_stream.ToEnumerable().AsParallel())
-        await SubscribeReturn(null, vnt, CancellationToken.None);
-      await ec_stream.DisposeAsync();
-
-      if (_init == _position)
-      {
-        _es_pool = _es_pool.Clean();
-        await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, StreamPosition.FromInt64(_position), SubscribeReturn);
-      }
-    }
-    private Task<bool> SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
-    {
-      _position++;
-      var result = int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span));
-      return IsPrime(result);
-    }
-
+    /// <summary>
+    /// Verify if it is prime
+    /// </summary>
+    /// <param name="number">number</param>
+    /// <returns>true if prime</returns>
     public async Task<bool> IsPrime(int number)
     {
       if (State.HasPrime(number))
@@ -116,65 +78,42 @@ namespace Grains
 
       _logger.LogInformation($"{number} is prime and will be added on the list");
 
-      await State.AddPrime(number);
-
-      State.Primes = State.Primes.OrderBy(x => x).ToList();
-      await WriteStateAsync();
-
+      await State_UpdateAsync(number);
       await RC_UpdateAsync(number);
-      await ES_UpdateAsnc(number);
+      await ES_UpdateAsync(number);
 
       return true;
     }
-    private Task ES_UpdateAsnc(int number)
-    {
-      var vnt = new EventData(
-        number.ToUuid(),
-        number.GetType().ToString(),
-        JsonSerializer.SerializeToUtf8Bytes(number)
-      );
 
-      return _client.AppendToStreamAsync(
-        InterfaceConst.PSPrimeOnly,
-        StreamState.Any,
-        new[] { vnt }
-      );
+    /// <summary>
+    /// State Pool
+    /// </summary>
+    private IDisposable _state_pool;
+    public async Task State_UpdateAsync(int number)
+    {
+      await State.AddPrime(number);
+
+      if (_state_pool == null)
+        _state_pool = RegisterTimer(_ => State_WriteAsync(), null, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1));
+    }
+    public async Task State_WriteAsync()
+    {
+      _state_pool = _state_pool.Clean();
+
+      State.Primes = State.Primes.OrderBy(x => x).ToList();
+      await WriteStateAsync();
     }
 
-    #region RC
-    private VersionedValue<int> _value;
-    private TaskCompletionSource<VersionedValue<int>> _wait;
-
-    public Task<VersionedValue<int>> GetAsync() => Task.FromResult(_value);
-
-    public Task RC_UpdateAsync(int value)
-    {
-      var key = this.GetPrimaryKeyLong();
-      // update the state
-      _value = _value.NextVersion(value);
-      _logger.LogInformation($"{nameof(PrimeGrain)} {key} updated value to {_value.Value} with version {_value.Version}");
-
-      // fulfill waiting promises
-      _wait.SetResult(_value);
-      _wait = new TaskCompletionSource<VersionedValue<int>>();
-
-      return Task.CompletedTask;
-    }
-
-    public Task<VersionedValue<int>> LongPollAsync(VersionToken knownVersion) =>
-            knownVersion == _value.Version
-            ? _wait.Task.WithDefaultOnTimeout(TimeSpan.Zero, VersionedValue<int>.None)
-            : Task.FromResult(_value);
-    #endregion
-
+    /// <summary>
+    /// Dispose pooling
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
-      await _client.DisposeAsync();
-      
-      _es_pool.Dispose();
-      _es_pool = null;
+      await DisposeRCAsync();
+      await DisposeESAsync();
 
-      _wait.SetCanceled();
+      _state_pool = _state_pool.Clean();
+      await WriteStateAsync();
       return;
     }
   }
