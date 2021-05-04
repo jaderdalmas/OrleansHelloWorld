@@ -37,7 +37,7 @@ namespace Tests.Grain
     public async Task SaysHello_Stream()
     {
       // Arrange
-      var grain = _cluster.Client.GetGrain<IHello>(0);
+      var grain = _cluster.Client.GetGrain<IHello>(1);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
       var stream = _cluster.Client.GetStreamProvider(InterfaceConst.SMSProvider)
@@ -50,7 +50,7 @@ namespace Tests.Grain
     public async Task SaysHello_ES()
     {
       // Arrange
-      var grain = _cluster.Client.GetGrain<IHello>(0);
+      var grain = _cluster.Client.GetGrain<IHello>(2);
       await grain.Consume();
 
       await _eventStore.SoftDeleteAsync(InterfaceConst.PSHello, StreamState.Any);
