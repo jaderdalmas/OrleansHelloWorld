@@ -90,11 +90,11 @@ namespace Grains
         await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, StreamPosition.FromInt64(_position), SubscribeReturn);
       }
     }
-    private Task SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
+    private Task<bool> SubscribeReturn(EventStore.Client.StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
       _position++;
       var result = int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span));
-      return Stream.OnNextAsync(result);
+      return IsPrime(result);
     }
 
     public async Task<bool> IsPrime(int number)
