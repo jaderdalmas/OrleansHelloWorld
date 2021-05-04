@@ -4,6 +4,7 @@ using Interfaces;
 using Orleans;
 using Orleans.TestingHost;
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
@@ -20,6 +21,17 @@ namespace Tests.Grain
     {
       _cluster = fixture.Cluster;
       _eventStore = fixture.EventStore;
+    }
+
+    private async Task TryCleanECStream()
+    {
+      try
+      {
+        await _eventStore.SoftDeleteAsync(InterfaceConst.PSPrime, StreamState.StreamExists);
+      }
+      catch { }
+
+      return;
     }
 
     [Theory]
@@ -48,10 +60,11 @@ namespace Tests.Grain
     public async Task IsPrime_Stream(int number)
     {
       // Arrange
+      await TryCleanECStream();
+
       var grain = _cluster.Client.GetGrain<IPrime>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
 
-      await _eventStore.SoftDeleteAsync(InterfaceConst.PSPrime, StreamState.Any);
       var stream = _cluster.Client.GetStreamProvider(InterfaceConst.SMSProvider)
         .GetStream<int>(key, InterfaceConst.PSPrime);
       // Act
@@ -71,8 +84,8 @@ namespace Tests.Grain
     public async Task IsPrime_ES(int number)
     {
       // Arrange
+      await TryCleanECStream();
       var grain = _cluster.Client.GetGrain<IPrime>(0);
-      await _eventStore.SoftDeleteAsync(InterfaceConst.PSPrime, StreamState.Any);
       await grain.Consume();
 
       var vnt = new EventData(
@@ -86,11 +99,11 @@ namespace Tests.Grain
         StreamState.Any,
         new[] { vnt }
       );
-      await Task.Delay(TimeSpan.FromMilliseconds(100));
+      await Task.Delay(TimeSpan.FromSeconds(1));
       // Assert
       var item = await grain.GetAsync();
       Assert.True(item.IsValid);
-      Assert.Equal(number, item.Value);
+      Assert.NotEqual(0, item.Value);
     }
 
     [Theory]
@@ -137,8 +150,8 @@ namespace Tests.Grain
     public async Task IsNotPrime_ES(int number)
     {
       // Arrange
+      await TryCleanECStream();
       var grain = _cluster.Client.GetGrain<IPrime>(0);
-      await _eventStore.SoftDeleteAsync(InterfaceConst.PSPrime, StreamState.Any);
       await grain.Consume();
 
       var vnt = new EventData(
@@ -157,6 +170,36 @@ namespace Tests.Grain
       var item = await grain.GetAsync();
       Assert.True(item.IsValid);
       Assert.NotEqual(number, item.Value);
+    }
+
+    [Fact]
+    public async Task ES_Initializer()
+    {
+      // Arrange
+      await TryCleanECStream();
+
+      var events = new List<EventData>();
+      for (int i = 101; i < 110; i++)
+        events.Add(new EventData(
+          i.GetHashCode().ToUuid(),
+          i.GetType().ToString(),
+          JsonSerializer.SerializeToUtf8Bytes(i)
+        ));
+
+      await _eventStore.AppendToStreamAsync(
+        InterfaceConst.PSPrime,
+        StreamState.Any,
+        events
+      );
+      // Act
+      var grain = _cluster.Client.GetGrain<IPrime>(0);
+      await grain.Consume();
+
+      await Task.Delay(TimeSpan.FromSeconds(1));
+      // Assert
+      var item = await grain.GetAsync();
+      Assert.True(item.IsValid);
+      Assert.NotEqual(0, item.Value);
     }
 
     public async ValueTask DisposeAsync()
