@@ -65,7 +65,11 @@ namespace Silo
             options.SuppressStatusMessages = true;
           });
         })
-        .ConfigureLogging(builder => { builder.AddConsole(); });
+        .ConfigureLogging(builder =>
+        {
+          builder.AddConsole();
+          builder.AddFilter("Grpc", LogLevel.Debug);
+        });
     }
 
     [Obsolete("Orleans 2.2")]
