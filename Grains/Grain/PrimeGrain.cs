@@ -43,14 +43,15 @@ namespace Grains
     }
 
     /// <summary>
-    /// Activate grain (state and pooling as ES and RC)
+    /// Activate grain (state and polling as ES and RC)
     /// </summary>
     public async override Task OnActivateAsync()
     {
       State.Initialize(WriteStateAsync);
 
       await OnActivateRCAsync();
-      await OnActivateESAsync();
+      //await OnActivateESAsync();
+      await OnActivatePersistAsync();
 
       await base.OnActivateAsync();
     }
@@ -86,33 +87,33 @@ namespace Grains
     }
 
     /// <summary>
-    /// State Pool
+    /// State Poll
     /// </summary>
-    private IDisposable _state_pool;
+    private IDisposable _state_poll;
     public async Task State_UpdateAsync(int number)
     {
       await State.AddPrime(number);
 
-      if (_state_pool == null)
-        _state_pool = RegisterTimer(_ => State_WriteAsync(), null, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1));
+      if (_state_poll == null)
+        _state_poll = RegisterTimer(_ => State_WriteAsync(), null, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1));
     }
     public async Task State_WriteAsync()
     {
-      _state_pool = _state_pool.Clean();
+      _state_poll = _state_poll.Clean();
 
       State.Primes = State.Primes.OrderBy(x => x).ToList();
       await WriteStateAsync();
     }
 
     /// <summary>
-    /// Dispose pooling
+    /// Dispose polling
     /// </summary>
     public async ValueTask DisposeAsync()
     {
       await DisposeRCAsync();
       //await DisposeESAsync();
 
-      _state_pool = _state_pool.Clean();
+      _state_poll = _state_poll.Clean();
       await WriteStateAsync();
       return;
     }
