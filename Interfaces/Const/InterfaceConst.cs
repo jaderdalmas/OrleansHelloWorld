@@ -8,6 +8,7 @@
 
     public const string SMSProvider = "SMSProvider";
     public const string PSHello = "PubSubHello";
+    public const string GroupPrime = "GroupPrime";
     public const string PSPrime = "PubSubPrime";
     public const string PSPrimeOnly = "PubSubPrimeOnly";
   }
