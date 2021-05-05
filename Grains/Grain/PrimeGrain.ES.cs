@@ -29,41 +29,45 @@ namespace Grains
     /// <returns></returns>
     private async Task OnActivateESAsync()
     {
-      _es_pool = RegisterTimer(_ => ES_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
-      while (_es_pool != null) await Task.Delay(TimeSpan.FromMilliseconds(500));
+      _es_poll = RegisterTimer(_ => ES_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
+      while (_es_poll != null) await Task.Delay(TimeSpan.FromMilliseconds(500));
     }
 
     /// <summary>
-    /// Event Store Pool
+    /// Event Store Poll
     /// </summary>
-    private IDisposable _es_pool;
+    private IDisposable _es_poll;
     /// <summary>
     /// Event Store Initialize (read events and subscribe at the end)
     /// </summary>
     public async Task ES_Initialize()
     {
-      var ec_stream = _client.ReadStreamAsync(
-        Direction.Forwards,
-        InterfaceConst.PSPrime,
-        StreamPosition.FromInt64(_position),
-        maxCount: 100
-      );
-
-      if (await ec_stream.ReadState == ReadState.StreamNotFound)
-      {
-        _es_pool = _es_pool.Clean();
-        await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
-        return;
-      }
-
       var _init = _position;
-      foreach (var vnt in ec_stream.ToEnumerable().AsParallel())
-        await SubscribeReturn(null, vnt, CancellationToken.None);
-      await ec_stream.DisposeAsync();
+      try
+      {
+        var ec_stream = _client.ReadStreamAsync(
+          Direction.Forwards,
+          InterfaceConst.PSPrime,
+          StreamPosition.FromInt64(_position),
+          maxCount: 100
+        );
+
+        if (await ec_stream.ReadState == ReadState.StreamNotFound)
+        {
+          _es_poll = _es_poll.Clean();
+          await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, SubscribeReturn);
+          return;
+        }
+
+        foreach (var vnt in ec_stream.ToEnumerable().AsParallel())
+          await SubscribeReturn(null, vnt, CancellationToken.None);
+        await ec_stream.DisposeAsync();
+      }
+      catch { }
 
       if (_init == _position)
       {
-        _es_pool = _es_pool.Clean();
+        _es_poll = _es_poll.Clean();
         await _client.SubscribeToStreamAsync(InterfaceConst.PSPrime, StreamPosition.FromInt64(_position), SubscribeReturn);
       }
     }
@@ -91,7 +95,7 @@ namespace Grains
     /// </summary>
     public ValueTask DisposeESAsync()
     {
-      _es_pool = _es_pool.Clean();
+      _es_poll = _es_poll.Clean();
       return new ValueTask();
     }
   }
