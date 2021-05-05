@@ -11,7 +11,7 @@ namespace Grains
     /// <param name="validate">validate poll response</param>
     /// <param name="apply">apply method (grain to)</param>
     /// <param name="failed">failed method (grain to)</param>
-    private static async Task RegisterRCPoolAsync<T>(this Grain grain, Func<Task<T>> poll, Func<T, bool> validate, Func<T, Task> apply, Func<T, Task> failed = null)
+    private static async Task RegisterRCPollAsync<T>(this Grain grain, Func<Task<T>> poll, Func<T, bool> validate, Func<T, Task> apply, Func<T, Task> failed = null)
     {
       try
       {

@@ -14,17 +14,17 @@ namespace Grains
     private VersionedValue<int> _value;
 
     /// <summary>
-    /// Pool
+    /// Poll
     /// </summary>
-    private TaskCompletionSource<VersionedValue<int>> _rc_pool;
+    private TaskCompletionSource<VersionedValue<int>> _rc_poll;
 
     /// <summary>
-    /// Initialize Value and Pool wait
+    /// Initialize Value and Poll wait
     /// </summary>
     public Task OnActivateRCAsync()
     {
       _value = VersionedValue<int>.None.NextVersion(0);
-      _rc_pool = new TaskCompletionSource<VersionedValue<int>>();
+      _rc_poll = new TaskCompletionSource<VersionedValue<int>>();
 
       return Task.CompletedTask;
     }
@@ -36,13 +36,13 @@ namespace Grains
     public Task<VersionedValue<int>> GetAsync() => Task.FromResult(_value);
 
     /// <summary>
-    /// 
+    /// Long Poll
     /// </summary>
     /// <param name="knownVersion"></param>
     /// <returns>Versioned Value</returns>
     public Task<VersionedValue<int>> LongPollAsync(VersionToken knownVersion) =>
             knownVersion == _value.Version
-            ? _rc_pool.Task.WithDefaultOnTimeout(TimeSpan.Zero, VersionedValue<int>.None)
+            ? _rc_poll.Task.WithDefaultOnTimeout(TimeSpan.FromSeconds(1), VersionedValue<int>.None)
             : Task.FromResult(_value);
 
     /// <summary>
@@ -57,8 +57,8 @@ namespace Grains
       _logger.LogInformation($"{nameof(PrimeGrain)} {key} updated value to {_value.Value} with version {_value.Version}");
 
       // fulfill waiting promises
-      _rc_pool.SetResult(_value);
-      _rc_pool = new TaskCompletionSource<VersionedValue<int>>();
+      _rc_poll.SetResult(_value);
+      _rc_poll = new TaskCompletionSource<VersionedValue<int>>();
 
       return Task.CompletedTask;
     }
@@ -68,7 +68,7 @@ namespace Grains
     /// </summary>
     private ValueTask DisposeRCAsync()
     {
-      _rc_pool.SetCanceled();
+      _rc_poll.SetCanceled();
       return new ValueTask();
     }
   }

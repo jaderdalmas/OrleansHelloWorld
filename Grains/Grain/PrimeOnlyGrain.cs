@@ -29,12 +29,12 @@ namespace Grains
 
     public override async Task OnActivateAsync()
     {
-      _pool = RegisterTimer(_ => RC_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+      _poll = RegisterTimer(_ => RC_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
 
       await base.OnActivateAsync();
     }
 
-    private IDisposable _pool;
+    private IDisposable _poll;
     private async Task RC_Initialize()
     {
       var key = this.GetPrimaryKeyLong();
