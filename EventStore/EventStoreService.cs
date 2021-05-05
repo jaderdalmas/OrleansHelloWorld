@@ -7,11 +7,13 @@ namespace EventStore
   public interface IEventStoreService
   {
     EventStoreClient Client { get; }
+    EventStorePersistentSubscriptionsClient PersistentSubscription { get; }
   }
 
   public class EventStoreService : IEventStoreService
   {
     public EventStoreClient Client { get; }
+    public EventStorePersistentSubscriptionsClient PersistentSubscription { get; }
 
     public EventStoreService(IOptions<EventStoreSettings> config)
     {
@@ -19,6 +21,7 @@ namespace EventStore
       var settings = EventStoreClientSettings.Create(cnn);
 
       Client = new EventStoreClient(settings);
+      PersistentSubscription = new EventStorePersistentSubscriptionsClient(settings);
     }
   }
 
@@ -28,6 +31,7 @@ namespace EventStore
     {
       services.AddSingleton<IEventStoreService, EventStoreService>();
       services.AddSingleton(_ => _.GetService<IEventStoreService>().Client);
+      services.AddSingleton(_ => _.GetService<IEventStoreService>().PersistentSubscription);
       return services;
     }
   }
