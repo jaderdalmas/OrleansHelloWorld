@@ -10,7 +10,9 @@ namespace Tests
     {
       var settings = EventStoreClientSettings
         .Create("esdb://localhost:2113?tls=false");
+
       Client = new EventStoreClient(settings);
+      PersistentSubscription = new EventStorePersistentSubscriptionsClient(settings);
     }
 
     public Task InitializeAsync()
@@ -24,5 +26,6 @@ namespace Tests
     }
 
     public EventStoreClient Client { get; private set; }
+    public EventStorePersistentSubscriptionsClient PersistentSubscription { get; private set; }
   }
 }
