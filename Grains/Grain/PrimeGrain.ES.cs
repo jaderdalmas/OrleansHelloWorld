@@ -1,8 +1,8 @@
-﻿using EventStore.Client;
+﻿using EventStore;
+using EventStore.Client;
 using Interfaces;
 using System;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,7 +13,15 @@ namespace Grains
     /// <summary>
     /// Event Store Client
     /// </summary>
-    private readonly EventStoreClient _client;
+    private EventStoreClient _client;
+
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    public void PrimeGrain_ES(EventStoreClient client)
+    {
+      _client = client;
+    }
 
     /// <summary>
     /// On Activate, Initialize ES reading and subscription
@@ -74,8 +82,8 @@ namespace Grains
     private Task<bool> SubscribeReturn(StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
       _position++;
-      var result = int.Parse(Encoding.UTF8.GetString(vnt.Event.Data.Span));
-      return IsPrime(result);
+      var number = int.Parse(vnt.ToJson());
+      return IsPrime(number);
     }
 
     /// <summary>

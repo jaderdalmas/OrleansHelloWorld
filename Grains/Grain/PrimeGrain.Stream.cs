@@ -12,7 +12,15 @@ namespace Grains
     /// <summary>
     /// Stream Observer
     /// </summary>
-    private readonly Observer<int> observer;
+    private Observer<int> observer;
+
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    public void PrimeGrain_Stream()
+    {
+      observer = new Observer<int>(_logger, (int number) => IsPrime(number));
+    }
 
     /// <summary>
     /// Initialize Stream Subscription
