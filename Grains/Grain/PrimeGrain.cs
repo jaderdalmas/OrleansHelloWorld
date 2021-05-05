@@ -1,6 +1,5 @@
 ﻿using EventStore.Client;
 using Interfaces;
-using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
@@ -24,12 +23,14 @@ namespace Grains
     /// </summary>
     /// <param name="logger">grain logger</param>
     /// <param name="client">event store client</param>
-    public PrimeGrain(ILogger<PrimeGrain> logger, EventStoreClient client)
+    /// <param name="persist">event store persistent subscription client</param>
+    public PrimeGrain(ILogger<PrimeGrain> logger, EventStoreClient client, EventStorePersistentSubscriptionsClient persist)
     {
       _logger = logger;
-      _client = client; // Event Store
-      // Stream
-      observer = new Observer<int>(_logger, (int number) => IsPrime(number));
+
+      //PrimeGrain_ES(client);
+      PrimeGrain_Persist(persist);
+      PrimeGrain_Stream();
     }
 
     /// <summary>
@@ -109,7 +110,7 @@ namespace Grains
     public async ValueTask DisposeAsync()
     {
       await DisposeRCAsync();
-      await DisposeESAsync();
+      //await DisposeESAsync();
 
       _state_pool = _state_pool.Clean();
       await WriteStateAsync();
