@@ -17,12 +17,12 @@ namespace Grains
     private readonly ILogger _logger;
     private readonly EventStoreClient _client;
 
-    public HelloGrain(ILogger<IHello> logger, EventStoreClient client)
+    public HelloGrain(ILoggerFactory factory, EventStoreClient client)
     {
-      _logger = logger;
+      _logger = factory.CreateLogger<IHello>();
 
       _client = client;
-      observer = new Observer<string>(logger, (string greeting) => SayHello(greeting));
+      observer = new Observer<string>(factory, (string greeting) => SayHello(greeting));
 
       _counter = 0;
     }

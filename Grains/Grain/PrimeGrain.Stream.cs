@@ -1,5 +1,6 @@
 ﻿using Interfaces;
 using Interfaces.Model;
+using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Streams.Core;
 using System.Threading.Tasks;
@@ -17,9 +18,9 @@ namespace Grains
     /// <summary>
     /// Constructor
     /// </summary>
-    public void PrimeGrain_Stream()
+    public void PrimeGrain_Stream(ILoggerFactory factory)
     {
-      observer = new Observer<int>(_logger, (int number) => IsPrime(number));
+      observer = new Observer<int>(factory, (int number) => IsPrime(number));
     }
 
     /// <summary>

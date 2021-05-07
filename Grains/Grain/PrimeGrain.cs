@@ -17,20 +17,22 @@ namespace Grains
     /// Logging Interface
     /// </summary>
     private readonly ILogger _logger;
+    private readonly IESService<int> _es_service;
 
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <param name="logger">grain logger</param>
+    /// <param name="factory">factory logger</param>
     /// <param name="client">event store client</param>
     /// <param name="persist">event store persistent subscription client</param>
-    public PrimeGrain(ILogger<PrimeGrain> logger, EventStoreClient client, EventStorePersistentSubscriptionsClient persist)
+    public PrimeGrain(ILoggerFactory factory, IESService<int> es_service, EventStorePersistentSubscriptionsClient persist)
     {
-      _logger = logger;
+      _logger = factory.CreateLogger<PrimeGrain>();
+      _es_service = es_service;
 
       //PrimeGrain_ES(client);
       PrimeGrain_Persist(persist);
-      PrimeGrain_Stream();
+      PrimeGrain_Stream(factory);
     }
 
     /// <summary>
@@ -52,6 +54,8 @@ namespace Grains
       await OnActivateRCAsync();
       //await OnActivateESAsync();
       await OnActivatePersistAsync();
+
+      await _es_service.Consume((int number) => IsPrime(number), InterfaceConst.PSPrime);
 
       await base.OnActivateAsync();
     }

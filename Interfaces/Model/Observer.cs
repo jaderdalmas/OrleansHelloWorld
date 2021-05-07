@@ -10,9 +10,9 @@ namespace Interfaces.Model
     private readonly ILogger logger;
     private readonly Func<T, Task> action;
 
-    public Observer(ILogger logger, Func<T, Task> action)
+    public Observer(ILoggerFactory factory, Func<T, Task> action)
     {
-      this.logger = logger;
+      logger = factory.CreateLogger<Observer<T>>();
       this.action = action;
     }
 
