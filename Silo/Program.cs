@@ -51,14 +51,15 @@ namespace Silo
             var client = provider.GetService<IClusterClient>();
 
             await factory.GetGrain<IHello>(0).Consume();
-            //await factory.GetGrain<IPrimeOnly>(0).Consume();
-            await factory.GetGrain<IPrime>(0).Consume();
+            await factory.GetGrain<IPrimeOnly>(0).Consume();
+            //await factory.GetGrain<IPrime>(0).Consume();
           });
         })
         .ConfigureServices(services =>
         {
           services.Configure<EventStoreSettings>(settings => settings.Connection = "esdb://localhost:2113?tls=false");
           services.AddEventStoreService();
+          services.AddGrainServices();
 
           services.Configure<ConsoleLifetimeOptions>(options =>
           {
