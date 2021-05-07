@@ -25,7 +25,7 @@ namespace Tests.Grain
       // Arrange
       var value = 0;
       // Act
-      var only = _cluster.GrainFactory.GetGrain<IPrimeOnly>(0);
+      var only = _cluster.GrainFactory.GetGrain<IPrimeOnly>(1);
       var result = await only.GetAsync();
       // Assert
       Assert.Equal(value, result);
