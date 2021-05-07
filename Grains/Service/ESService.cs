@@ -19,7 +19,7 @@ namespace Grains
     /// <summary>
     /// Event Store Client
     /// </summary>
-    private EventStoreClient _client;
+    private readonly EventStoreClient _client;
 
     /// <summary>
     /// Action for the ES Subs Return
