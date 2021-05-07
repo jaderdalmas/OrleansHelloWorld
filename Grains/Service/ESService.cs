@@ -47,18 +47,17 @@ namespace Grains
     {
       _action = action;
 
-      _task = Initialize(stream);
-      while (_task != null) await _task;
+      bool result;
+      do
+      {
+        result = await Initialize(stream);
+      } while (result);
     }
 
     /// <summary>
-    /// Event Store Poll
-    /// </summary>
-    private Task _task;
-    /// <summary>
     /// Event Store Initialize (read events and subscribe at the end)
     /// </summary>
-    private async Task Initialize(string stream)
+    private async Task<bool> Initialize(string stream)
     {
       var _init = _position;
       try
@@ -71,9 +70,8 @@ namespace Grains
 
         if (await ec_stream.ReadState == ReadState.StreamNotFound)
         {
-          _task = null;
           await _client.SubscribeToStreamAsync(stream, SubscribeReturn);
-          return;
+          return false;
         }
 
         foreach (var vnt in ec_stream.ToEnumerable().AsParallel())
@@ -84,9 +82,11 @@ namespace Grains
 
       if (_init == _position)
       {
-        _task = null;
         await _client.SubscribeToStreamAsync(stream, StreamPosition.FromInt64(_position), SubscribeReturn);
+        return false;
       }
+
+      return true;
     }
 
     /// <summary>
@@ -120,7 +120,6 @@ namespace Grains
     /// </summary>
     public ValueTask DisposeAsync()
     {
-      _task = null;
       _action = null;
       return new ValueTask();
     }
