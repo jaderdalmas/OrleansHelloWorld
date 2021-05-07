@@ -49,7 +49,7 @@ namespace Tests.Event
       // Arrange
       await _persist.CreateAsync(TestNoStream, TestGroup, Settings);
       // Act
-      await _persist.SubscribeAsync(TestNoStream, TestGroup, null);
+      await _persist.SubscribeAsync(TestNoStream, TestGroup, SubscribeReturn);
       // Clean
       await _persist.DeleteAsync(TestNoStream, TestGroup);
     }
