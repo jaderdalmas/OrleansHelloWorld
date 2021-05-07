@@ -34,6 +34,7 @@ namespace Tests
       hostBuilder.ConfigureServices(services =>
       {
         services.AddEventStoreService();
+        services.AddGrainServices();
       });
     }
   }
