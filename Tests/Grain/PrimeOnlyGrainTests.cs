@@ -1,5 +1,6 @@
 using EventStore.Client;
 using Interfaces;
+using Interfaces.Model;
 using Orleans.TestingHost;
 using System;
 using System.Threading.Tasks;
@@ -47,7 +48,7 @@ namespace Tests.Grain
       await prime.IsPrime(number);
       await Task.Delay(TimeSpan.FromSeconds(1));
 
-      var rprime = await prime.GetAsync();
+      var rprime = await prime.LongPollAsync(VersionToken.None);
       var rpnly = await only.GetAsync();
       // Assert
       Assert.Equal(number, rprime.Value);

@@ -1,5 +1,6 @@
 ﻿using EventStore.Client;
 using Interfaces;
+using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
@@ -18,6 +19,8 @@ namespace Grains
     /// </summary>
     private readonly ILogger _logger;
     private readonly IESService<int> _es_service;
+    private readonly IRCService<int> _rc_service;
+    public Task<VersionedValue<int>> LongPollAsync(VersionToken knownVersion) => _rc_service.LongPollAsync(knownVersion);
 
     /// <summary>
     /// Constructor
@@ -25,12 +28,12 @@ namespace Grains
     /// <param name="factory">factory logger</param>
     /// <param name="client">event store client</param>
     /// <param name="persist">event store persistent subscription client</param>
-    public PrimeGrain(ILoggerFactory factory, IESService<int> es_service, EventStorePersistentSubscriptionsClient persist)
+    public PrimeGrain(ILoggerFactory factory, IESService<int> es_service, IRCService<int> rc_service, EventStorePersistentSubscriptionsClient persist)
     {
       _logger = factory.CreateLogger<PrimeGrain>();
       _es_service = es_service;
+      _rc_service = rc_service;
 
-      //PrimeGrain_ES(client);
       PrimeGrain_Persist(persist);
       PrimeGrain_Stream(factory);
     }
@@ -51,8 +54,6 @@ namespace Grains
     {
       State.Initialize(WriteStateAsync);
 
-      await OnActivateRCAsync();
-      //await OnActivateESAsync();
       await OnActivatePersistAsync();
 
       await _es_service.Consume((int number) => IsPrime(number), InterfaceConst.PSPrime);
@@ -70,7 +71,7 @@ namespace Grains
       if (State.HasPrime(number))
       {
         _logger.LogInformation($"{number} is prime and is on the list");
-        await RC_UpdateAsync(number);
+        await _rc_service.UpdateAsync(number);
         return true;
       }
 
@@ -85,7 +86,7 @@ namespace Grains
       _logger.LogInformation($"{number} is prime and will be added on the list");
 
       await State_UpdateAsync(number);
-      await RC_UpdateAsync(number);
+      await _rc_service.UpdateAsync(number);
 
       return true;
     }
@@ -114,9 +115,6 @@ namespace Grains
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-      await DisposeRCAsync();
-      //await DisposeESAsync();
-
       _state_poll = _state_poll.Clean();
       await WriteStateAsync();
       return;

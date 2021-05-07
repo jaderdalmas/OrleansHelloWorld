@@ -1,5 +1,6 @@
 using EventStore.Client;
 using Interfaces;
+using Interfaces.Model;
 using Orleans;
 using Orleans.TestingHost;
 using System;
@@ -72,7 +73,7 @@ namespace Tests.Grain
       // Act
       await stream.OnNextAsync(number);
       // Assert
-      var item = await grain.GetAsync();
+      var item = await grain.LongPollAsync(VersionToken.None);
       Assert.True(item.IsValid);
       Assert.Equal(number, item.Value);
     }
@@ -103,7 +104,7 @@ namespace Tests.Grain
       );
       await Task.Delay(TimeSpan.FromSeconds(1));
       // Assert
-      var item = await grain.GetAsync();
+      var item = await grain.LongPollAsync(VersionToken.None);
       Assert.True(item.IsValid);
       Assert.NotEqual(0, item.Value);
     }
@@ -139,7 +140,7 @@ namespace Tests.Grain
       // Act
       await stream.OnNextAsync(number);
       // Assert
-      var item = await grain.GetAsync();
+      var item = await grain.LongPollAsync(VersionToken.None);
       Assert.True(item.IsValid);
       Assert.NotEqual(number, item.Value);
     }
@@ -169,7 +170,7 @@ namespace Tests.Grain
       );
       await Task.Delay(TimeSpan.FromMilliseconds(100));
       // Assert
-      var item = await grain.GetAsync();
+      var item = await grain.LongPollAsync(VersionToken.None);
       Assert.True(item.IsValid);
       Assert.NotEqual(number, item.Value);
     }
@@ -199,7 +200,7 @@ namespace Tests.Grain
 
       await Task.Delay(TimeSpan.FromSeconds(1));
       // Assert
-      var item = await grain.GetAsync();
+      var item = await grain.LongPollAsync(VersionToken.None);
       Assert.True(item.IsValid);
       Assert.NotEqual(0, item.Value);
     }
