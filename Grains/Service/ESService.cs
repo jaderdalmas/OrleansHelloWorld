@@ -101,7 +101,7 @@ namespace Grains
     /// <param name="ct">Cancellation Token</param>
     private Task SubscribeReturn(StreamSubscription ss, ResolvedEvent vnt, CancellationToken ct)
     {
-      _position++;
+      _position = vnt.OriginalEventNumber.ToInt64();
 
       try
       {
