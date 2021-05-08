@@ -1,6 +1,7 @@
 ﻿using Interfaces.Model;
 using Orleans;
 using Orleans.Streams.Core;
+using System;
 using System.Threading.Tasks;
 
 namespace Interfaces
@@ -10,5 +11,6 @@ namespace Interfaces
     Task<bool> IsPrime(int number);
 
     Task<VersionedValue<int>> LongPollAsync(VersionToken knownVersion);
+    Task SubscribeAsync(Func<int, Task> action);
   }
 }

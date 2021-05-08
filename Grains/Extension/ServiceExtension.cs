@@ -9,6 +9,7 @@ namespace Grains
     {
       service.AddScoped<IESService<int>, ESService<int>>();
       service.AddScoped<IRCService<int>, RCService<int>>();
+      service.AddScoped<IRXService<int>, RXService<int>>();
 
       return service;
     }

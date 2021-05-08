@@ -21,15 +21,17 @@ namespace Grains
       _client = eventStore;
     }
 
-    public Task Consume()
+    public async Task Consume()
     {
-      _logger.LogInformation("Starting to consume...");
-      return Task.CompletedTask;
+      Func<int, Task> func = (int number) => UpdateAsync(number);
+      var key = this.GetPrimaryKeyLong();
+      await GrainFactory.GetGrain<IPrime>(key).SubscribeAsync(func);
+      return;
     }
 
     public override async Task OnActivateAsync()
     {
-      _poll = RegisterTimer(_ => RC_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+      //_poll = RegisterTimer(_ => RC_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
 
       await base.OnActivateAsync();
     }
@@ -48,14 +50,14 @@ namespace Grains
 
       _cache = update;
       _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {_cache.Value} with version {_cache.Version}");
-      await ES_UpdateAsync(update.Value);
+      await UpdateAsync(update.Value);
     }
 
     /// <summary>
     /// Add ES prime only number
     /// </summary>
     /// <param name="number">number</param>
-    private Task ES_UpdateAsync(int number)
+    public Task UpdateAsync(int number)
     {
       var vnt = new EventData(
         number.ToUuid(),
