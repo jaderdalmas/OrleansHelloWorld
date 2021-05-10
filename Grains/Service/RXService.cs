@@ -30,7 +30,7 @@ namespace Grains
     /// <param name="factory">logger factory</param>
     public RXService(ILoggerFactory factory)
     {
-      _logger = factory.CreateLogger<RCService<T>>();
+      _logger = factory.CreateLogger<RXService<T>>();
 
       _value = VersionedValue<T>.None.NextVersion(default);
 
