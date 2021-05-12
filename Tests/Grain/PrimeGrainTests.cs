@@ -195,7 +195,7 @@ namespace Tests.Grain
         events
       );
       // Act
-      var grain = _cluster.Client.GetGrain<IPrime>(0);
+      var grain = _cluster.Client.GetGrain<IPrime>(1);
       await grain.Consume();
 
       await Task.Delay(TimeSpan.FromSeconds(1));
