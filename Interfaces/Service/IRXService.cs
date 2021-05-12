@@ -10,6 +10,6 @@ namespace Interfaces
 
     Task UpdateAsync(T value);
 
-    Task Subscribe(Func<T, Task> action);
+    Task Subscribe(IObserver<T> observer);
   }
 }

@@ -2,7 +2,8 @@
 using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Reactive.Subjects;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Grains
@@ -20,9 +21,9 @@ namespace Grains
     private VersionedValue<T> _value;
 
     /// <summary>
-    /// Subject
+    /// Observers
     /// </summary>
-    private Subject<T> _jobs;
+    private List<IObserver<T>> _observers;
 
     /// <summary>
     /// Constructor
@@ -34,7 +35,7 @@ namespace Grains
 
       _value = VersionedValue<T>.None.NextVersion(default);
 
-      _jobs = new Subject<T>();
+      _observers = new List<IObserver<T>>();
     }
 
     /// <summary>
@@ -43,9 +44,10 @@ namespace Grains
     /// <returns>Versioned Value</returns>
     public Task<VersionedValue<T>> GetAsync() => Task.FromResult(_value);
 
-    public Task Subscribe(Func<T, Task> action)
+    public Task Subscribe(IObserver<T> observer)
     {
-      _jobs.Subscribe((T job) => action.Invoke(job));
+      if (!_observers.Contains(observer))
+        _observers.Add(observer);
 
       return Task.CompletedTask;
     }
@@ -60,9 +62,19 @@ namespace Grains
 
       _logger.LogInformation($"{nameof(PrimeGrain)} updated value to {_value.Value} with version {_value.Version}");
 
-      _jobs.OnNext(value);
+      foreach (var observer in _observers.AsParallel())
+        observer.OnNext(value);
 
       return Task.CompletedTask;
+    }
+
+    public void OnCompleted()
+    {
+      foreach (var observer in _observers.AsParallel())
+        if (_observers.Contains(observer))
+          observer.OnCompleted();
+
+      _observers.Clear();
     }
   }
 }
