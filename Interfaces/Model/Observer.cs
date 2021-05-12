@@ -7,23 +7,23 @@ namespace Interfaces.Model
 {
   public class Observer<T> : IAsyncObserver<T>
   {
-    private readonly ILogger logger;
-    private readonly Func<T, Task> action;
+    private readonly ILogger _logger;
+    private readonly Func<T, Task> _action;
 
     public Observer(ILoggerFactory factory, Func<T, Task> action)
     {
-      logger = factory.CreateLogger<Observer<T>>();
-      this.action = action;
+      _logger = factory.CreateLogger<Observer<T>>();
+      _action = action;
     }
 
     public Task OnCompletedAsync() => Task.CompletedTask;
 
     public Task OnErrorAsync(Exception ex)
     {
-      logger.LogError(ex, ex.Message);
+      _logger.LogError(ex, ex.Message);
       return Task.CompletedTask;
     }
 
-    public Task OnNextAsync(T item, StreamSequenceToken token = null) => action(item);
+    public Task OnNextAsync(T item, StreamSequenceToken token = null) => _action(item);
   }
 }

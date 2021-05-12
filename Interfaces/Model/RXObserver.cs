@@ -4,28 +4,31 @@ using System.Threading.Tasks;
 
 public class RXObserver<T> : IObserver<T>
 {
-  private readonly ILogger logger;
-  private readonly Func<T, Task> action;
-  private IDisposable unsubscriber;
+  private readonly ILogger _logger;
+  private Func<T, Task> _action;
 
   public RXObserver(ILoggerFactory factory, Func<T, Task> action)
   {
-    logger = factory.CreateLogger<RXObserver<T>>();
-    this.action = action;
+    _logger = factory.CreateLogger<RXObserver<T>>();
+    _action = action;
   }
 
   public virtual void Subscribe(IObservable<T> provider)
   {
     if (provider != null)
-      unsubscriber = provider.Subscribe(this);
+      _ = provider.Subscribe(this);
   }
 
-  public virtual void OnCompleted() => unsubscriber.Dispose();
+  public virtual void OnCompleted() { }
 
   public virtual void OnError(Exception e)
   {
-    logger.LogError(e, e.Message);
+    _logger.LogError(e, e.Message);
   }
 
-  public virtual void OnNext(T value) => action(value);
+  public virtual void OnNext(T value)
+  {
+    if (_action != null)
+      _action(value).Wait();
+  }
 }
