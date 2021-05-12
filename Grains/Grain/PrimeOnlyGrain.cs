@@ -14,43 +14,30 @@ namespace Grains
   {
     private readonly ILogger _logger;
     private readonly EventStoreClient _client;
+    private readonly IObserver<int> _observer;
 
-    public PrimeOnlyGrain(ILogger<PrimeOnlyGrain> logger, EventStoreClient eventStore)
+    public PrimeOnlyGrain(ILoggerFactory factory, EventStoreClient eventStore)
     {
-      _logger = logger;
+      _logger = factory.CreateLogger<PrimeOnlyGrain>();
       _client = eventStore;
+
+      _observer = new RXObserver<int>(factory, (int number) => this.UpdateAsync(number));
     }
 
-    public async Task Consume()
-    {
-      Func<int, Task> func = (int number) => UpdateAsync(number);
-      var key = this.GetPrimaryKeyLong();
-      await GrainFactory.GetGrain<IPrime>(key).SubscribeAsync(func);
-      return;
-    }
+    public Task Consume() => Task.CompletedTask;
 
     public override async Task OnActivateAsync()
     {
-      //_poll = RegisterTimer(_ => RC_Initialize(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+      var key = this.GetPrimaryKeyLong();
+      _ = GrainFactory.GetGrain<IPrime>(key).Subscribe(_observer);
 
       await base.OnActivateAsync();
     }
 
-    private IDisposable _poll;
-    private async Task RC_Initialize()
+    public override Task OnDeactivateAsync()
     {
-      var key = this.GetPrimaryKeyLong();
-
-      var update = await GrainFactory.GetGrain<IPrime>(key).LongPollAsync(_cache.Version);
-      if (!update.IsValid)
-      {
-        _logger.LogWarning("The reactive poll timed out by returning a 'none' response before Orleans could break the promise.");
-        return;
-      }
-
-      _cache = update;
-      _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {_cache.Value} with version {_cache.Version}");
-      await UpdateAsync(update.Value);
+      _observer.OnCompleted();
+      return Task.CompletedTask;
     }
 
     /// <summary>
@@ -59,6 +46,10 @@ namespace Grains
     /// <param name="number">number</param>
     public Task UpdateAsync(int number)
     {
+      var key = this.GetPrimaryKeyLong();
+      _cache = _cache.NextVersion(number);
+      _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {_cache.Value} with version {_cache.Version}");
+
       var vnt = new EventData(
         number.ToUuid(),
         number.GetType().ToString(),

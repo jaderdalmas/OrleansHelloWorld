@@ -10,7 +10,7 @@ namespace Interfaces
   {
     Task<bool> IsPrime(int number);
 
-    Task<VersionedValue<int>> LongPollAsync(VersionToken knownVersion);
-    Task SubscribeAsync(Func<int, Task> action);
+    Task Subscribe(IObserver<int> item);
+    Task<VersionedValue<int>> GetAsync();
   }
 }

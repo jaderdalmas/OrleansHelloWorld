@@ -19,10 +19,9 @@ namespace Grains
     /// </summary>
     private readonly ILogger _logger;
     private readonly IESService<int> _es_service;
-    private readonly IRCService<int> _rc_service;
-    public Task<VersionedValue<int>> LongPollAsync(VersionToken knownVersion) => _rc_service.LongPollAsync(knownVersion);
     private readonly IRXService<int> _rx_service;
-    public Task SubscribeAsync(Func<int, Task> action) => _rx_service.Subscribe(action);
+    public Task Subscribe(IObserver<int> item) => _rx_service.Subscribe(item);
+    public Task<VersionedValue<int>> GetAsync() => _rx_service.GetAsync();
 
     /// <summary>
     /// Constructor
@@ -30,11 +29,10 @@ namespace Grains
     /// <param name="factory">factory logger</param>
     /// <param name="client">event store client</param>
     /// <param name="persist">event store persistent subscription client</param>
-    public PrimeGrain(ILoggerFactory factory, IESService<int> es_service, IRCService<int> rc_service, IRXService<int> rx_service, EventStorePersistentSubscriptionsClient persist)
+    public PrimeGrain(ILoggerFactory factory, IESService<int> es_service, IRXService<int> rx_service, EventStorePersistentSubscriptionsClient persist)
     {
       _logger = factory.CreateLogger<PrimeGrain>();
       _es_service = es_service;
-      _rc_service = rc_service;
       _rx_service = rx_service;
 
       PrimeGrain_Persist(persist);
@@ -44,11 +42,7 @@ namespace Grains
     /// <summary>
     /// Activate grain
     /// </summary>
-    public Task Consume()
-    {
-      _logger.LogInformation("Starting to consume...");
-      return Task.CompletedTask;
-    }
+    public Task Consume() => Task.CompletedTask;
 
     /// <summary>
     /// Activate grain (state and polling as ES and RC)
@@ -74,7 +68,6 @@ namespace Grains
       if (State.HasPrime(number))
       {
         _logger.LogInformation($"{number} is prime and is on the list");
-        //await _rc_service.UpdateAsync(number);
         await _rx_service.UpdateAsync(number);
         return true;
       }
@@ -90,7 +83,6 @@ namespace Grains
       _logger.LogInformation($"{number} is prime and will be added on the list");
 
       await State_UpdateAsync(number);
-      //await _rc_service.UpdateAsync(number);
       await _rx_service.UpdateAsync(number);
 
       return true;
