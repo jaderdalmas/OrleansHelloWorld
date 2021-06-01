@@ -1,4 +1,5 @@
-﻿using EventStore.Client;
+﻿using EventStore;
+using EventStore.Client;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -8,6 +9,20 @@ namespace Tests.Event
 {
   public partial class EventStoreGrpcTests
   {
+    [Fact]
+    public async Task Delete_Every()
+    {
+      // Arrange
+      var streamName = $"{TestStream}-*";
+
+      var list = await _client.GetStreams(streamName.Replace("*", ""));
+      // Act
+      foreach (var item in list)
+        _ = await _client.SoftDeleteAsync(streamName, StreamState.Any);
+      // Assert
+      Assert.NotEmpty(list);
+    }
+
     [Fact]
     public async Task Delete_State()
     {
