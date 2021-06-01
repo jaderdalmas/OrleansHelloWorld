@@ -23,6 +23,7 @@ namespace Tests
     public async Task DisposeAsync()
     {
       await Client.DisposeAsync();
+      await PersistentSubscription.DisposeAsync();
     }
 
     public EventStoreClient Client { get; private set; }
