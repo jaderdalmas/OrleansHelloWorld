@@ -17,7 +17,7 @@ namespace Tests.Event
       { // can be created only once
         await _persist.CreateAsync(TestNoStream, TestGroup, Settings);
       }
-      catch(Exception ex)
+      catch (Exception ex)
       {
         Assert.IsType<InvalidOperationException>(ex);
       }

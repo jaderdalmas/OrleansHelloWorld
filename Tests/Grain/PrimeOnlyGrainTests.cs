@@ -1,6 +1,5 @@
 using EventStore.Client;
 using Interfaces;
-using Interfaces.Model;
 using Orleans.TestingHost;
 using System;
 using System.Threading.Tasks;

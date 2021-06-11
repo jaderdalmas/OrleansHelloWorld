@@ -15,7 +15,7 @@ namespace Tests.Event
     }
 
     private PersistentSubscriptionSettings Settings => new PersistentSubscriptionSettings();
-    
+
     private string EventType => "TestEvent";
     private string TestStream => "test-stream";
     private string TestGroup => "test-group";
