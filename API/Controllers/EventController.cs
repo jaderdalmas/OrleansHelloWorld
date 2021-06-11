@@ -1,9 +1,9 @@
-﻿using EventStore.Client;
+﻿using EventStore;
+using EventStore.Client;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -12,7 +12,6 @@ namespace API.Controllers
   public class EventController : ControllerBase
   {
     private readonly EventStoreClient _client;
-    private string EventType => "TestType";
     private string TestStream => "test-stream";
 
     public EventController(EventStoreClient client)
@@ -51,16 +50,10 @@ namespace API.Controllers
         ImportantData = message
       };
 
-      var eventData = new EventData(
-        Uuid.NewUuid(),
-        EventType,
-        JsonSerializer.SerializeToUtf8Bytes(data)
-      );
-
       await _client.AppendToStreamAsync(
         string.IsNullOrWhiteSpace(stream) ? TestStream : stream,
         StreamState.Any,
-        new[] { eventData }
+        new[] { data.GetEvent() }
       );
     }
   }

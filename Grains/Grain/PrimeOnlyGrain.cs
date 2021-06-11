@@ -50,16 +50,10 @@ namespace Grains
       _cache = _cache.NextVersion(number);
       _logger.LogInformation($"{DateTime.Now.TimeOfDay}: {nameof(PrimeOnlyGrain)} {key} updated value to {_cache.Value} with version {_cache.Version}");
 
-      var vnt = new EventData(
-        number.ToUuid(),
-        number.GetType().ToString(),
-        JsonSerializer.SerializeToUtf8Bytes(number)
-      );
-
       return _client.AppendToStreamAsync(
         InterfaceConst.PSPrimeOnly,
         StreamState.Any,
-        new[] { vnt }
+        new[] { number.GetEvent() }
       );
     }
 

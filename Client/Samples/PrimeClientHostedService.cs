@@ -7,7 +7,6 @@ using Orleans;
 using Orleans.Streams;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -82,10 +81,10 @@ namespace Client
 
           var events = new List<EventData>
           {
-            GetEvent(item + 1),
-            GetEvent(item + 3),
-            GetEvent(item + 7),
-            GetEvent(item + 9)
+            (item + 1).GetEvent(),
+            (item + 3).GetEvent(),
+            (item + 7).GetEvent(),
+            (item + 9).GetEvent()
           };
 
           try
@@ -96,14 +95,6 @@ namespace Client
           catch { }
         }
       }
-    }
-    private EventData GetEvent(uint number)
-    {
-      return new EventData(
-        number.ToUuid(),
-        number.GetType().ToString(),
-        JsonSerializer.SerializeToUtf8Bytes(number)
-      );
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

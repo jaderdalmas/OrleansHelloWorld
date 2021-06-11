@@ -9,7 +9,6 @@ using Orleans.Streams;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -84,11 +83,7 @@ namespace Client
       {
         var evt = $"Good morning, {i}!";
 
-        events.Add(new EventData(
-          evt.GetHashCode().ToUuid(),
-          evt.GetType().ToString(),
-          JsonSerializer.SerializeToUtf8Bytes(evt)
-        ));
+        events.Add(evt.GetEvent());
       }
 
       await _eventStore.AppendToStreamAsync(
