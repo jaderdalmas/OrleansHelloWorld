@@ -1,4 +1,5 @@
-﻿using EventStore;
+﻿using EventSourcing;
+using EventStore;
 using Grains;
 using Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +19,7 @@ namespace Tests
       hostBuilder.ConfigureServices(services =>
       {
         services.AddEventStoreService();
+        services.AddAggregateServices();
       });
     }
   }
@@ -35,6 +37,7 @@ namespace Tests
       {
         services.AddEventStoreService();
         services.AddGrainServices();
+        services.AddAggregateServices();
       });
     }
   }
