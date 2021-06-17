@@ -28,8 +28,8 @@ namespace Client
     public async Task StartAsync(CancellationToken cancellationToken)
     {
       //await Simple();
-      //await Stream();
-      await EventStore();
+      await Stream();
+      //await EventStore();
     }
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Old Version")]
@@ -42,8 +42,7 @@ namespace Client
       return Task.CompletedTask;
     }
 
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Old Version")]
-    private Task Stream()
+    private async Task Stream()
     {
       var grain = _orleans.GetGrain<IPrime>(0);
       var key = grain.GetGrainIdentity().PrimaryKey;
@@ -52,17 +51,10 @@ namespace Client
         .GetStream<int>(key, InterfaceConst.PSPrime);
       //await stream.SubscribeAsync(OnNextAsync);
 
-      var tasks = new List<Task>();
+      List<Task> tasks = new();
       for (int i = 101; i < 110; i++)
-      {
         tasks.Add(stream.OnNextAsync(i));
-
-        if (i % 100 == 0)
-          Task.WaitAll(tasks.ToArray());
-      }
       Task.WaitAll(tasks.ToArray());
-
-      return Task.CompletedTask;
     }
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Testing")]
     private Task OnNextAsync(int item, StreamSequenceToken token = null)
@@ -71,6 +63,7 @@ namespace Client
       return Task.CompletedTask;
     }
 
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Old Version")]
     private async Task EventStore()
     {
       for (uint mil = 0; mil < 100; mil++)

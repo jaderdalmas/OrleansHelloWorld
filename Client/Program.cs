@@ -25,7 +25,7 @@ namespace Client
           services.AddOrleansClusterClient();
           services.AddEventStoreClient();
 
-          services.AddHostedService<HelloWorldClientHostedService>();
+          //services.AddHostedService<HelloWorldClientHostedService>();
           services.AddHostedService<PrimeClientHostedService>();
 
           services.Configure<ConsoleLifetimeOptions>(options =>

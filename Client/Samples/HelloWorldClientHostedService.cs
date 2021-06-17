@@ -30,8 +30,8 @@ namespace Client
     public async Task StartAsync(CancellationToken cancellationToken)
     {
       //await Simple();
-      //await Stream();
-      await EventStore();
+      await Stream();
+      //await EventStore();
     }
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Old Version")]
@@ -54,7 +54,6 @@ namespace Client
       Console.WriteLine($"\nArchived greetings: {Utils.EnumerableToString(greetings)}");
     }
 
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Old Version")]
     private async Task Stream()
     {
       var grain = _orleans.GetGrain<IHello>(0);
@@ -74,6 +73,7 @@ namespace Client
       return Task.CompletedTask;
     }
 
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Old Version")]
     private async Task EventStore()
     {
       await _eventStore.SoftDeleteAsync(InterfaceConst.PSHello, StreamState.Any);
