@@ -1,9 +1,12 @@
-﻿using EventStore.Client;
+﻿using EventSourcing.Aggregate;
+using EventSourcing.Event;
+using EventStore.Client;
 using Interfaces;
 using Interfaces.Model;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
+using Orleans.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,16 +27,22 @@ namespace Grains
     public Task<VersionedValue<int>> GetAsync() => _rx_service.GetAsync();
 
     /// <summary>
+    /// Prime Aggregate
+    /// </summary>
+    private readonly IPersistentState<PrimeAggregate> _aggregate;
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="factory">factory logger</param>
     /// <param name="client">event store client</param>
     /// <param name="persist">event store persistent subscription client</param>
-    public PrimeGrain(ILoggerFactory factory, IESService<int> es_service, IRXService<int> rx_service, EventStorePersistentSubscriptionsClient persist)
+    public PrimeGrain(ILoggerFactory factory, IESService<int> es_service, IRXService<int> rx_service, [PersistentState("primes", GrainConst.Storage)] IPersistentState<PrimeAggregate> aggregate, EventStorePersistentSubscriptionsClient persist)
     {
       _logger = factory.CreateLogger<PrimeGrain>();
       _es_service = es_service;
       _rx_service = rx_service;
+      _aggregate = aggregate;
 
       PrimeGrain_Persist(persist);
       PrimeGrain_Stream(factory);
@@ -56,6 +65,20 @@ namespace Grains
       await _es_service.Consume((int number) => IsPrime(number), InterfaceConst.PSPrime);
 
       await base.OnActivateAsync();
+    }
+
+    /// <summary>
+    /// Handle IsPrime_Event
+    /// </summary>
+    /// <param name="event">event to be handled</param>
+    public async Task<bool> Handle(IsPrimeEvent @event)
+    {
+      var result = await _aggregate.State.Apply(@event);
+
+      if (result)
+        await State_UpdateAsync(@event.Number);
+
+      return result;
     }
 
     /// <summary>
@@ -105,6 +128,9 @@ namespace Grains
 
       State.Primes = State.Primes.OrderBy(x => x).ToList();
       await WriteStateAsync();
+
+      _aggregate.State.Order();
+      await _aggregate.WriteStateAsync();
     }
 
     /// <summary>
@@ -112,8 +138,7 @@ namespace Grains
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-      _state_poll = _state_poll.Clean();
-      await WriteStateAsync();
+      await State_WriteAsync();
       return;
     }
   }
