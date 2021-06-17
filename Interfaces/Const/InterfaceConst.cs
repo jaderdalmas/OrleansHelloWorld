@@ -11,5 +11,6 @@
     public const string GroupPrime = "GroupPrime";
     public const string PSPrime = "PubSubPrime";
     public const string PSPrimeOnly = "PubSubPrimeOnly";
+    public const string ESPrime = "ESPrime";
   }
 }
