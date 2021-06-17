@@ -2,6 +2,7 @@
 using Orleans;
 using Orleans.TestingHost;
 using System.Threading.Tasks;
+using Tests.Extension;
 using Xunit;
 
 namespace Tests
@@ -31,6 +32,6 @@ namespace Tests
 
     public TestCluster Cluster { get; private set; }
     public IClusterClient Orleans => Cluster.Client;
-    public EventStoreClient EventStore => Cluster.ServiceProvider.GetService(typeof(EventStoreClient)) as EventStoreClient;
+    public EventStoreClient EventStore => Cluster.GetService<EventStoreClient>();
   }
 }
