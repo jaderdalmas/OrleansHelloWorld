@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EventSourcing.Aggregate
 {
-  public partial class PrimeAggregate : IAggregate
+  public class PrimeAggregateES
   {
     public IList<IsPrimeEvent> Events { get; private set; } = new List<IsPrimeEvent>();
     public IEnumerable<int> PrimeEvents => Events.Where(x => x.Prime.Value).Select(x => x.Number);
@@ -26,16 +26,16 @@ namespace EventSourcing.Aggregate
       foreach (var vnt in result.ToEnumerable())
         Events.Add(vnt.To<IsPrimeEvent>());
 
-      foreach (var @event in Events)
-      {
-        if (!@event.Prime.HasValue)
-          IsPrime(@event.Number);
-        else if (@event.Prime.Value)
-          Primes.Add(@event.Number);
-      }
+      //foreach (var @event in Events)
+      //{
+      //  if (!@event.Prime.HasValue)
+      //    IsPrime(@event.Number);
+      //  else if (@event.Prime.Value)
+      //    Primes.Add(@event.Number);
+      //}
     }
 
-    public async Task Emit(IEvent @event)
+    public async Task Emit<TEvent>(TEvent @event) where TEvent : IEvent
     {
       var vnt = @event as IsPrimeEvent;
       Events.Add(vnt);

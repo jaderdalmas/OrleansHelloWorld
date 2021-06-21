@@ -1,5 +1,4 @@
 ﻿using EventSourcing.Event;
-using EventStore.Client;
 using Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -8,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace EventSourcing.Aggregate
 {
-  public partial class PrimeAggregate
+  public class PrimeAggregate : IEventAggregate<IsPrimeEvent>
   {
     public IList<int> Primes { get; private set; } = new List<int>();
+    public IEnumerable<int> PrimeEvents => _aggregate.Events.Where(x => x.Prime.Value).Select(x => x.Number);
 
     public void Order()
     {
@@ -18,38 +18,49 @@ namespace EventSourcing.Aggregate
     }
 
     private ILogger _logger;
+    private IStoreAggregate<IsPrimeEvent> _aggregate;
 
-    public PrimeAggregate(ILoggerFactory factory, EventStoreClient eventStore)
+    public PrimeAggregate(ILoggerFactory factory, IStoreAggregate<IsPrimeEvent> aggregate)
     {
       _logger = factory.CreateLogger<PrimeAggregate>();
+      _aggregate = aggregate;
 
-      Initialize_ES(eventStore);
+      _aggregate.Initialize((IsPrimeEvent @event) => Initialize(@event)).Wait();
+      //Initialize_ES(eventStore);
     }
 
-    public async Task<bool> Apply(IEvent @event)
+    private Task Initialize(IsPrimeEvent @event)
     {
-      var vnt = @event as IsPrimeEvent;
+      if (!@event.Prime.HasValue)
+        IsPrime(@event.Number);
+      else if (@event.Prime.Value)
+        Primes.Add(@event.Number);
 
-      var has = Events.FirstOrDefault(x => x.Number == vnt.Number);
+      return Task.CompletedTask;
+    }
+
+    public async Task<bool> Apply(IsPrimeEvent @event)
+    {
+      var has = _aggregate.Events.FirstOrDefault(x => x.Number == @event.Number);
       if (has != null)
       {
-        _logger.LogInformation($"{vnt.Number} is{(has.Prime.Value ? string.Empty : " not")} prime and is on the event list");
+        _logger.LogInformation($"{@event.Number} is{(has.Prime.Value ? string.Empty : " not")} prime and is on the event list");
         return has.Prime.Value;
       }
 
-      if (!vnt.CanCalculate(PrimeEvents))
-        await AddInnerPrimes(vnt.Number);
+      if (!@event.CanCalculate(Primes))
+        await AddInnerPrimes(@event.Number);
 
-      vnt.IsPrime(PrimeEvents.ToList());
-      _logger.LogInformation($"{vnt.Number} is{(has.Prime.Value ? string.Empty : " not")} prime and will be added on the event list");
+      @event.IsPrime(Primes);
+      _logger.LogInformation($"{@event.Number} is{(has.Prime.Value ? string.Empty : " not")} prime and will be added on the event list");
 
-      await Emit(vnt);
-      return vnt.Prime.Value;
+      await _aggregate.Emit(@event);
+      return @event.Prime.Value;
     }
 
     private bool IsPrime(int number)
     {
-      if (number.IsPrime(PrimeEvents))
+      if (number.IsPrime(Primes))
       {
         Primes.Add(number);
         return true;
@@ -60,7 +71,7 @@ namespace EventSourcing.Aggregate
 
     private async Task AddInnerPrimes(int number)
     {
-      var value = PrimeEvents.Any() ? PrimeEvents.Max() : PrimeConst.FirstPrime;
+      var value = Primes.Any() ? Primes.Max() : PrimeConst.FirstPrime;
 
       while (value < number)
       {
