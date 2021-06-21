@@ -1,11 +1,7 @@
-﻿using System.Threading.Tasks;
-
-namespace Interfaces
+﻿namespace Interfaces
 {
-  public interface IAggregate
+  public interface IAggregate<T> : IEventAggregate<T>, IStoreAggregate<T>
+    where T : IEvent
   {
-    Task<bool> Apply(IEvent @event);
-
-    Task Emit(IEvent @event);
   }
 }
