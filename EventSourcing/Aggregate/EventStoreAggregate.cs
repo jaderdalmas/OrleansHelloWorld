@@ -15,12 +15,14 @@ namespace EventSourcing.Aggregate
     public IList<T> Events { get; private set; } = new List<T>();
 
     private EventStoreClient _eventStore;
+    private string _stream;
 
-    public EventStoreAggregate(EventStoreClient eventStore)
+    public EventStoreAggregate(EventStoreClient eventStore, string stream = InterfaceConst.ESPrime)
     {
       _eventStore = eventStore;
+      _stream = stream;
 
-      var result = _eventStore.ReadStreamAsync(Direction.Forwards, InterfaceConst.ESPrime, StreamPosition.Start);
+      var result = _eventStore.ReadStreamAsync(Direction.Forwards, _stream, StreamPosition.Start);
       if (result.ReadState.Result == ReadState.StreamNotFound)
         return;
 
@@ -38,10 +40,8 @@ namespace EventSourcing.Aggregate
     {
       Events.Add(@event);
 
-      await _eventStore.AppendToStreamAsync(
-        InterfaceConst.ESPrime,
-        StreamState.Any,
-        new[] { @event.GetEvent() }
+      await _eventStore.AppendToStreamAsync(_stream,
+        StreamState.Any, new[] { @event.GetEvent() }
       );
     }
   }

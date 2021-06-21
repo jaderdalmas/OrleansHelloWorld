@@ -17,7 +17,7 @@ namespace EventSourcing.Event
       if (!Prime.HasValue)
         Prime = Number.IsPrime(primes);
 
-      if(Prime.Value)
+      if (Prime.Value)
         primes.Add(Number);
 
       return Prime.Value;
