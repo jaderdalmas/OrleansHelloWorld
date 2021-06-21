@@ -1,4 +1,6 @@
 ﻿using EventSourcing.Aggregate;
+using EventSourcing.Event;
+using Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventSourcing
@@ -7,7 +9,10 @@ namespace EventSourcing
   {
     public static IServiceCollection AddAggregateServices(this IServiceCollection service)
     {
-      service.AddSingleton<PrimeAggregate>();
+      service.AddSingleton<IStoreAggregate<IsPrimeEvent>, EventStoreAggregate<IsPrimeEvent>>();
+
+      service.AddSingleton<IEventAggregate<IsPrimeEvent>, PrimeAggregate>();
+      service.AddSingleton(_ => (PrimeAggregate)_.GetService<IEventAggregate<IsPrimeEvent>>());
 
       return service;
     }
