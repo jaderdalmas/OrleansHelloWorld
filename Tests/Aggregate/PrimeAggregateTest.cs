@@ -30,7 +30,7 @@ namespace Tests.Aggregate
     public async Task Apply_IsPrimeEvent(int number)
     {
       // Arrange
-      IAggregate aggregate = _cluster.GetService<PrimeAggregate>();
+      var aggregate = _cluster.GetService<IEventAggregate<IsPrimeEvent>>();
       // Act
       var result = await aggregate.Apply(new IsPrimeEvent() { Number = number });
       // Assert
@@ -46,7 +46,7 @@ namespace Tests.Aggregate
     public async Task Apply_IsPrimeEvent_False(int number)
     {
       // Arrange
-      IAggregate aggregate = _cluster.GetService<PrimeAggregate>();
+      var aggregate = _cluster.GetService<PrimeAggregate>();
       // Act
       var result = await aggregate.Apply(new IsPrimeEvent() { Number = number });
       // Assert
