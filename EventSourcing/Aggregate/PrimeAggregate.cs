@@ -10,7 +10,7 @@ namespace EventSourcing.Aggregate
   public class PrimeAggregate : IEventAggregate<IsPrimeEvent>
   {
     public IList<int> Primes { get; private set; } = new List<int>();
-    public IEnumerable<int> PrimeEvents => _aggregate.Events.Where(x => x.Prime.Value).Select(x => x.Number);
+    //public IEnumerable<int> PrimeEvents => _aggregate.GetPrimes();
 
     public void Order()
     {

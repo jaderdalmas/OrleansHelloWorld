@@ -1,4 +1,5 @@
-﻿using Interfaces;
+﻿using EventSourcing.Event;
+using Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,9 @@ namespace EventSourcing
 {
   public static class PrimeExtension
   {
+    public static IEnumerable<int> GetPrimes(this IStoreAggregate<IsPrimeEvent> aggregate)
+      => aggregate.Events.Where(x => x.Prime.Value).Select(x => x.Number);
+
     public static bool CanCalculate(this IEnumerable<int> primes, int number)
       => number == PrimeConst.FirstPrime || primes.Any(x => x >= Math.Sqrt(number));
 
