@@ -365,4 +365,4 @@ FodyWeavers.xsd
 
 # Test Files
 TestFiles/
-*.bat
+*.txt

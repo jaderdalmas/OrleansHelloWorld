@@ -1,0 +1,1 @@
+call git_refresh.bat > git_refresh_log.txt
